@@ -1,0 +1,2 @@
+DOMAIN = "baby_monitor"
+DEFAULT_SCAN_INTERVAL = 5
