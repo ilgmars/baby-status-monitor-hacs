@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Baby Status Monitor",
+        "description": "Enter the dashboard URL and the API_TOKEN from the server's .env.",
+        "data": {
+          "host": "Dashboard URL (e.g. https://192.168.1.10)",
+          "token": "API token",
+          "stream_url": "Live stream RTSP URL (optional; blank uses rtsp://<host>:8554/cam)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not reach the dashboard at that URL.",
+      "invalid_auth": "The API token was rejected."
+    },
+    "abort": {
+      "already_configured": "This dashboard is already added."
+    }
+  }
+}
