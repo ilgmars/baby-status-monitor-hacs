@@ -9,18 +9,18 @@ from .entity import BabyEntity
 
 # (key, name, unit)
 SENSORS = [
-    ("respiration_rate", "Respiration rate", "bpm"),
-    ("sleep_state", "Sleep state", None),
-    ("cry_reason", "Cry reason", None),
+    ("respiration_rate", "Respiration rate [ML]", "bpm"),
+    ("sleep_state", "Sleep state [ML]", None),
+    ("cry_reason", "Cry reason [ML]", None),
 ]
 
 # LLM scene narration topics carry JSON objects; expose one field as the state and the
 # whole object (incl. its time stamp) as attributes. (key, name, state_field, icon)
 SCENE_SENSORS = [
-    ("scene", "Latest status", "description", "mdi:cctv"),
-    ("scene", "Baby position", "position", "mdi:human-child"),
-    ("scene", "Eyes", "eyes", "mdi:eye-outline"),
-    ("scene_attention_event", "Attention reason", "reason", "mdi:alert-circle-outline"),
+    ("scene", "Latest status [LLM]", "description", "mdi:cctv"),
+    ("scene", "Baby position [LLM]", "position", "mdi:human-child"),
+    ("scene", "Eyes [LLM]", "eyes", "mdi:eye-outline"),
+    ("scene_attention_event", "Attention reason [LLM]", "reason", "mdi:alert-circle-outline"),
 ]
 
 

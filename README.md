@@ -21,6 +21,12 @@ sleep, and a live camera. No MQTT, no broker, no bridge.
   (back/tummy/side/sitting/standing), "Eyes" (open/closed), "Face covered", and
   "Baby visible"
 
+## Dashboard
+
+`examples/dashboard.yaml` is a ready-made Lovelace view (live stream on top, one
+tile per status) - replace the placeholder credentials/host and adjust entity ids.
+Entity names carry a source tag: `[ML]` = local detectors, `[LLM]` = scene narration.
+
 ## Install
 
 ### HACS

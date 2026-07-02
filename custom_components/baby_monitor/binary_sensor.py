@@ -9,21 +9,21 @@ from .entity import BabyEntity
 
 # (key, name, device_class)
 BINARY = [
-    ("present", "Baby present", "occupancy"),
-    ("breathing_detected", "Breathing detected", None),
-    ("breathing_degraded", "Breathing detection degraded", "problem"),
-    ("crying", "Crying", "sound"),
-    ("movement", "Movement", "motion"),
+    ("present", "Baby present [ML]", "occupancy"),
+    ("breathing_detected", "Breathing detected [ML]", None),
+    ("breathing_degraded", "Breathing detection degraded [ML]", "problem"),
+    ("crying", "Crying [ML]", "sound"),
+    ("movement", "Movement [ML]", "motion"),
     ("camera_online", "Camera online", "connectivity"),
-    # LLM scene narration: current "needs attention" verdict (the sensor "Attention
-    # reason" keeps the last event's what+when even after this clears).
-    ("scene_attention", "Attention needed", "problem"),
+    # LLM scene narration: current "needs attention" verdict; the "Attention reason"
+    # sensor clears back to none together with this.
+    ("scene_attention", "Attention needed [LLM]", "problem"),
 ]
 
 # Booleans living inside the scene JSON object. (key, name, field, device_class)
 SCENE_BINARY = [
-    ("scene", "Face covered", "face_covered", "problem"),
-    ("scene", "Baby visible", "baby_visible", "occupancy"),
+    ("scene", "Face covered [LLM]", "face_covered", "problem"),
+    ("scene", "Baby visible [LLM]", "baby_visible", "occupancy"),
 ]
 
 

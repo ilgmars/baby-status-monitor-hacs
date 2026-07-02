@@ -1,0 +1,70 @@
+# Example Lovelace dashboard for the Baby Status Monitor.
+#
+# Replace before use:
+#   - VIEWER_USER / VIEWER_PASSWORD: the go2rtc viewer credentials from your server
+#   - SERVER_HOST: your baby-status-monitor host (e.g. 192.168.1.10)
+#   - entity ids: HA derives them from your device/integration name; check yours under
+#     Settings -> Devices & Services. The ids below assume the integration is named
+#     "Baby Monitor".
+#
+# The camera card is https://github.com/dermotduffy/advanced-camera-card (HACS).
+# Entities marked [ML] come from the local detectors, [LLM] from scene narration
+# (SCENE_LLM=on on the server).
+views:
+  - type: sections
+    max_columns: 1
+    sections:
+      - cards:
+          - type: custom:advanced-camera-card
+            cameras:
+              - camera_entity: camera.baby_monitor_live
+                live_provider: go2rtc
+                go2rtc:
+                  url: >-
+                    https://VIEWER_USER:VIEWER_PASSWORD@SERVER_HOST/live
+                  stream: cam
+                  modes:
+                    - mse
+                    - webrtc
+            layout: responsive
+            tap_action:
+              action: more-info
+            live:
+              preload: true
+              auto_unmute:
+                - selected
+              auto_mute: []
+          - type: vertical-stack
+            cards:
+              - type: tile
+                entity: binary_sensor.baby_monitor_baby_present
+              - type: tile
+                entity: sensor.baby_monitor_attention_reason
+              - type: tile
+                entity: binary_sensor.baby_monitor_face_covered
+              - type: tile
+                entity: binary_sensor.baby_monitor_crying
+              - type: tile
+                entity: sensor.baby_monitor_cry_reason
+              - type: tile
+                entity: binary_sensor.baby_monitor_breathing_detected
+              - type: tile
+                entity: binary_sensor.baby_monitor_breathing_detection_degraded
+              - type: tile
+                entity: sensor.baby_monitor_respiration_rate
+              - type: tile
+                entity: sensor.baby_monitor_sleep_state
+              - type: tile
+                entity: sensor.baby_monitor_baby_position
+              - type: tile
+                entity: binary_sensor.baby_monitor_attention_needed
+              - type: tile
+                entity: sensor.baby_monitor_latest_status
+              - type: tile
+                entity: sensor.baby_monitor_eyes
+              - type: tile
+                entity: binary_sensor.baby_monitor_baby_visible
+              - type: tile
+                entity: binary_sensor.baby_monitor_movement
+              - type: tile
+                entity: binary_sensor.baby_monitor_camera_online

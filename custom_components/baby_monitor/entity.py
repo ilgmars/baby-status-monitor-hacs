@@ -8,7 +8,9 @@ from .const import DOMAIN
 
 
 class BabyEntity(CoordinatorEntity):
-    _attr_has_entity_name = True
+    # has_entity_name=False: buttons/tiles show the entity name alone ("Latest status
+    # [LLM]"), not "Baby Monitor Latest status ..." (owner preference).
+    _attr_has_entity_name = False
 
     def __init__(self, coordinator, entry, key: str, name: str) -> None:
         super().__init__(coordinator)
