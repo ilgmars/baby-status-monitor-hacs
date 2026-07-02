@@ -1,4 +1,4 @@
-"""Numeric / text sensors: respiration rate, sleep state, cry reason."""
+"""Numeric / text sensors: respiration rate, sleep state, cry reason, LLM scene."""
 
 from __future__ import annotations
 
@@ -14,12 +14,24 @@ SENSORS = [
     ("cry_reason", "Cry reason", None),
 ]
 
+# LLM scene narration topics carry JSON objects; expose one field as the state and the
+# whole object (incl. its time stamp) as attributes. (key, name, state_field, icon)
+SCENE_SENSORS = [
+    ("scene", "Latest status", "description", "mdi:cctv"),
+    ("scene", "Baby position", "position", "mdi:human-child"),
+    ("scene", "Eyes", "eyes", "mdi:eye-outline"),
+    ("scene_attention_event", "Attention reason", "reason", "mdi:alert-circle-outline"),
+]
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        BabySensor(coordinator, entry, key, name, unit) for key, name, unit in SENSORS
-    )
+    entities = [BabySensor(coordinator, entry, key, name, unit) for key, name, unit in SENSORS]
+    entities += [
+        BabySceneSensor(coordinator, entry, key, name, field, icon)
+        for key, name, field, icon in SCENE_SENSORS
+    ]
+    async_add_entities(entities)
 
 
 class BabySensor(BabyEntity, SensorEntity):
@@ -30,3 +42,27 @@ class BabySensor(BabyEntity, SensorEntity):
     @property
     def native_value(self):
         return self._value
+
+
+class BabySceneSensor(BabyEntity, SensorEntity):
+    """One field of a scene JSON object as state; the whole object as attributes."""
+
+    def __init__(self, coordinator, entry, key, name, field, icon) -> None:
+        # unique_id must differ per field, not just per topic key.
+        super().__init__(coordinator, entry, f"{key}_{field}", name)
+        self._topic_key = key
+        self._field = field
+        self._attr_icon = icon
+
+    @property
+    def _scene(self) -> dict:
+        value = (self.coordinator.data or {}).get(self._topic_key)
+        return value if isinstance(value, dict) else {}
+
+    @property
+    def native_value(self):
+        return self._scene.get(self._field)
+
+    @property
+    def extra_state_attributes(self):
+        return self._scene

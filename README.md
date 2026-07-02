@@ -14,6 +14,12 @@ sleep, and a live camera. No MQTT, no broker, no bridge.
 - Breathing detected, and a breathing-detection-degraded flag
 - Camera online
 - A Live camera with real video from the go2rtc restream
+- LLM scene narration (needs `SCENE_LLM=on` on the server): "Latest status" (one-line
+  description of what is going on, with a time stamp attribute), "Attention needed"
+  (binary) with an "Attention reason" sensor that keeps the last event's what+when
+  (spit-up, soiled leak, face covered, climbing, and so on), plus "Baby position"
+  (back/tummy/side/sitting/standing), "Eyes" (open/closed), "Face covered", and
+  "Baby visible"
 
 ## Install
 
