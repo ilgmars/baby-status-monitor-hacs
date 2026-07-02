@@ -20,8 +20,8 @@ sleep, and a live camera. No MQTT, no broker, no bridge.
   (spit-up, soiled leak, face covered, climbing, and so on), plus "Baby position"
   (back/tummy/side/sitting/standing), "Face covered", and "Baby visible"
 
-Health self-diagnostics: "LLM health" (ok/error/off - the scene narrator and its
-proxy; last success + error text in attributes) and "Audio health" (ok/silent - the
+Health self-diagnostics: "Sys LLM health" (ok/error/off - the scene narrator and its
+proxy; last success + error text in attributes) and "Sys audio health" (ok/silent - the
 cry detector's audio feed). "Camera online" covers the video stream as before.
 
 ## Dashboard
