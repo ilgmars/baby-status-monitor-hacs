@@ -19,7 +19,6 @@ SENSORS = [
 SCENE_SENSORS = [
     ("scene", "Latest status [LLM]", "description", "mdi:cctv"),
     ("scene", "Baby position [LLM]", "position", "mdi:human-child"),
-    ("scene", "Eyes [LLM]", "eyes", "mdi:eye-outline"),
     ("scene_attention_event", "Attention reason [LLM]", "reason", "mdi:alert-circle-outline"),
 ]
 

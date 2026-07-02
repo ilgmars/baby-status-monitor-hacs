@@ -61,8 +61,6 @@ views:
               - type: tile
                 entity: sensor.baby_monitor_latest_status
               - type: tile
-                entity: sensor.baby_monitor_eyes
-              - type: tile
                 entity: binary_sensor.baby_monitor_baby_visible
               - type: tile
                 entity: binary_sensor.baby_monitor_movement

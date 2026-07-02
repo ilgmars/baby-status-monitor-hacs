@@ -18,8 +18,7 @@ sleep, and a live camera. No MQTT, no broker, no bridge.
   description of what is going on, with a time stamp attribute), "Attention needed"
   (binary) with an "Attention reason" sensor that keeps the last event's what+when
   (spit-up, soiled leak, face covered, climbing, and so on), plus "Baby position"
-  (back/tummy/side/sitting/standing), "Eyes" (open/closed), "Face covered", and
-  "Baby visible"
+  (back/tummy/side/sitting/standing), "Face covered", and "Baby visible"
 
 ## Dashboard
 
