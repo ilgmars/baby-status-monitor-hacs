@@ -65,7 +65,12 @@ class BabySceneSensor(BabyEntity, SensorEntity):
 
     @property
     def native_value(self):
-        return self._scene.get(self._field)
+        value = self._scene.get(self._field)
+        # Sys LLM health shows WHICH tier answers while healthy (local gpu /
+        # litellm / nvidia api / cpu fallback) and the error state otherwise.
+        if self._field == "llm" and value == "ok":
+            return self._scene.get("llm_source") or value
+        return value
 
     @property
     def extra_state_attributes(self):
