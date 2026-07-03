@@ -15,9 +15,11 @@ BINARY = [
     ("crying", "Crying [ML]", "sound"),
     ("movement", "Movement [ML]", "motion"),
     ("camera_online", "Camera online", "connectivity"),
-    # LLM scene narration: current "needs attention" verdict; the "Attention reason"
-    # sensor clears back to none together with this.
-    ("scene_attention", "Attention needed [LLM]", "problem"),
+    # LLM scene narration severity split (owner spec): Danger = immediate hazard
+    # (loose object/bag/coin, blocked airway, stuck limb, climbing); Warning = worth a
+    # look (stain/wet spot, asleep on tummy). Reasons clear together with the flags.
+    ("scene_attention", "Danger [LLM]", "problem"),
+    ("scene_warning", "Warning [LLM]", "problem"),
 ]
 
 # Booleans living inside the scene JSON object. (key, name, field, device_class)

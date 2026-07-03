@@ -19,7 +19,8 @@ SENSORS = [
 SCENE_SENSORS = [
     ("scene", "Latest status [LLM]", "description", "mdi:cctv"),
     ("scene", "Baby position [LLM]", "position", "mdi:human-child"),
-    ("scene_attention_event", "Attention reason [LLM]", "reason", "mdi:alert-circle-outline"),
+    ("scene_attention_event", "Danger reason [LLM]", "reason", "mdi:alert-octagon-outline"),
+    ("scene_warning_event", "Warning reason [LLM]", "reason", "mdi:alert-outline"),
     # Self-diagnostics (baby/status/health): is the monitor itself healthy.
     ("health", "Sys LLM health", "llm", "mdi:robot-outline"),
     ("health", "Sys audio health", "audio", "mdi:microphone-outline"),
