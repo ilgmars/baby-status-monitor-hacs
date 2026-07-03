@@ -36,33 +36,55 @@ views:
               auto_mute: []
           - type: vertical-stack
             cards:
+              - type: horizontal-stack
+                cards:
+                  - type: tile
+                    entity: binary_sensor.baby_monitor_danger
+                  - type: tile
+                    entity: binary_sensor.baby_monitor_warning
               - type: tile
-                entity: binary_sensor.baby_monitor_baby_present
+                entity: sensor.baby_monitor_danger_reason
               - type: tile
-                entity: sensor.baby_monitor_attention_reason
-              - type: tile
-                entity: binary_sensor.baby_monitor_face_covered
-              - type: tile
-                entity: binary_sensor.baby_monitor_crying
-              - type: tile
-                entity: sensor.baby_monitor_cry_reason
-              - type: tile
-                entity: binary_sensor.baby_monitor_breathing_detected
-              - type: tile
-                entity: binary_sensor.baby_monitor_breathing_detection_degraded
-              - type: tile
-                entity: sensor.baby_monitor_respiration_rate
-              - type: tile
-                entity: sensor.baby_monitor_sleep_state
-              - type: tile
-                entity: sensor.baby_monitor_baby_position
-              - type: tile
-                entity: binary_sensor.baby_monitor_attention_needed
+                entity: sensor.baby_monitor_warning_reason
+              - type: horizontal-stack
+                cards:
+                  - type: tile
+                    entity: binary_sensor.baby_monitor_baby_present
+                  - type: tile
+                    entity: binary_sensor.baby_monitor_baby_visible
               - type: tile
                 entity: sensor.baby_monitor_latest_status
+              - type: horizontal-stack
+                cards:
+                  - type: tile
+                    entity: binary_sensor.baby_monitor_crying
+                  - type: tile
+                    entity: sensor.baby_monitor_cry_reason
+              - type: horizontal-stack
+                cards:
+                  - type: tile
+                    entity: binary_sensor.baby_monitor_breathing_detected
+                  - type: tile
+                    entity: sensor.baby_monitor_respiration_rate
               - type: tile
-                entity: binary_sensor.baby_monitor_baby_visible
+                entity: binary_sensor.baby_monitor_breathing_detection_degraded
+              - type: horizontal-stack
+                cards:
+                  - type: tile
+                    entity: sensor.baby_monitor_sleep_state
+                  - type: tile
+                    entity: sensor.baby_monitor_baby_position
+              - type: horizontal-stack
+                cards:
+                  - type: tile
+                    entity: binary_sensor.baby_monitor_face_covered
+                  - type: tile
+                    entity: binary_sensor.baby_monitor_movement
+              - type: horizontal-stack
+                cards:
+                  - type: tile
+                    entity: binary_sensor.baby_monitor_camera_online
+                  - type: tile
+                    entity: sensor.baby_monitor_sys_llm_health
               - type: tile
-                entity: binary_sensor.baby_monitor_movement
-              - type: tile
-                entity: binary_sensor.baby_monitor_camera_online
+                entity: sensor.baby_monitor_sys_audio_health
