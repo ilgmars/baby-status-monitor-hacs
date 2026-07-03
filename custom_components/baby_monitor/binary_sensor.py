@@ -18,8 +18,8 @@ BINARY = [
     # LLM scene narration severity split (owner spec): Danger = immediate hazard
     # (loose object/bag/coin, blocked airway, stuck limb, climbing); Warning = worth a
     # look (stain/wet spot, asleep on tummy). Reasons clear together with the flags.
-    ("scene_attention", "Danger [LLM]", "problem"),
-    ("scene_warning", "Warning [LLM]", "problem"),
+    ("scene_attention", "Warning [LLM]", "problem"),
+    ("scene_danger", "Danger [LLM]", "problem"),
 ]
 
 # Booleans living inside the scene JSON object. (key, name, field, device_class)
