@@ -30,6 +30,19 @@ cry detector's audio feed). "Camera online" covers the video stream as before.
 tile per status) - replace the placeholder credentials/host and adjust entity ids.
 Entity names carry a source tag: `[ML]` = local detectors, `[LLM]` = scene narration.
 
+### Crib-items CCTV card
+
+`www/crib-items-card.js` is a small dependency-free custom card that renders the
+objects the monitor has seen in the crib (the "Crib items [LLM]" sensor) as a
+CCTV-style grid - green-on-black tiles, a blinking REC dot, and a red HAZARD frame
+for anything flagged dangerous. To use it:
+
+1. Copy `www/crib-items-card.js` to your HA `config/www/` folder.
+2. Add it as a resource: Settings -> Dashboards -> (top-right menu) Resources ->
+   Add resource, URL `/local/crib-items-card.js`, type "JavaScript module".
+3. The card is already wired in `examples/dashboard.yaml`
+   (`type: custom:crib-items-card`).
+
 ## Install
 
 ### HACS

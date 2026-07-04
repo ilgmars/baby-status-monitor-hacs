@@ -88,3 +88,10 @@ views:
                     entity: sensor.baby_monitor_sys_llm_health
               - type: tile
                 entity: sensor.baby_monitor_sys_audio_health
+              # CCTV-style grid of objects seen in the crib. Needs the custom card
+              # www/crib-items-card.js added as a dashboard resource (see README).
+              - type: custom:crib-items-card
+                entity: sensor.baby_monitor_crib_items
+                title: Crib camera - objects
+                columns: 3
+                min_tiles: 6
