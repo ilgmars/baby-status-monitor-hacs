@@ -22,6 +22,8 @@ SCENE_SENSORS = [
     ("scene_attention_event", "Attention reason [LLM]", "reason", "mdi:alert-circle-outline"),
     ("scene_danger_event", "Danger reason [LLM]", "reason", "mdi:alert-octagon-outline"),
     ("scene_warning_event", "Warning reason [LLM]", "reason", "mdi:alert-outline"),
+    # Objects the item scanner currently sees in the crib (list -> "pacifier, toy").
+    ("scene_items", "Crib items [LLM]", "items", "mdi:cube-scan"),
     # Self-diagnostics (baby/status/health): is the monitor itself healthy.
     ("health", "Sys LLM health", "llm", "mdi:robot-outline"),
     ("health", "Sys audio health", "audio", "mdi:microphone-outline"),
@@ -70,6 +72,16 @@ class BabySceneSensor(BabyEntity, SensorEntity):
         # litellm / nvidia api / cpu fallback) and the error state otherwise.
         if self._field == "llm" and value == "ok":
             return self._scene.get("llm_source") or value
+        # Crib items: a list of {item, hazard} -> readable state, hazards marked.
+        if self._field == "items":
+            if not value:
+                return "none"
+            names = [
+                ("\u26a0 " if it.get("hazard") else "") + str(it.get("item", "object"))
+                for it in value
+                if isinstance(it, dict)
+            ]
+            return ", ".join(names)[:255] or "none"
         return value
 
     @property
