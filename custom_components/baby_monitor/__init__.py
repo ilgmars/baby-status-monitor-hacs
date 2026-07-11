@@ -32,16 +32,17 @@ async def _async_register_panel(hass: HomeAssistant) -> None:
     from pathlib import Path
 
     from homeassistant.components import panel_custom
-    from homeassistant.components.http import StaticPathConfig
 
     if PANEL_PATH in hass.data.get("frontend_panels", {}):
         return
     js = Path(__file__).parent / "frontend" / "crib-items-panel.js"
-    try:
+    try:  # HA 2024.6+: async static path registration
+        from homeassistant.components.http import StaticPathConfig
+
         await hass.http.async_register_static_paths(
             [StaticPathConfig(PANEL_URL, str(js), cache_headers=False)]
         )
-    except (ImportError, AttributeError):  # older HA cores
+    except Exception:  # older cores: the sync API
         hass.http.register_static_path(PANEL_URL, str(js), cache_headers=False)
     await panel_custom.async_register_panel(
         hass,
