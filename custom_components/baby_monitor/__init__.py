@@ -19,6 +19,40 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.CAMERA]
+PANEL_URL = "/baby-monitor-frontend/crib-items-panel.js"
+PANEL_PATH = "crib-items"
+
+
+async def _async_register_panel(hass: HomeAssistant) -> None:
+    """Sidebar 'Crib items' panel: a CCTV wall of the objects seen in the crib.
+
+    The integration serves its own JS (no manual /local resource setup) and
+    registers a custom panel; idempotent across reloads / multiple entries.
+    """
+    from pathlib import Path
+
+    from homeassistant.components import panel_custom
+    from homeassistant.components.http import StaticPathConfig
+
+    if PANEL_PATH in hass.data.get("frontend_panels", {}):
+        return
+    js = Path(__file__).parent / "frontend" / "crib-items-panel.js"
+    try:
+        await hass.http.async_register_static_paths(
+            [StaticPathConfig(PANEL_URL, str(js), cache_headers=False)]
+        )
+    except (ImportError, AttributeError):  # older HA cores
+        hass.http.register_static_path(PANEL_URL, str(js), cache_headers=False)
+    await panel_custom.async_register_panel(
+        hass,
+        frontend_url_path=PANEL_PATH,
+        webcomponent_name="crib-items-panel",
+        sidebar_title="Crib items",
+        sidebar_icon="mdi:cctv",
+        module_url=PANEL_URL,
+        embed_iframe=False,
+        require_admin=False,
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -53,6 +87,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    try:
+        await _async_register_panel(hass)
+    except Exception as err:  # the panel is cosmetic - never block sensors on it
+        _LOGGER.warning("Crib items sidebar panel not registered: %s", err)
     return True
 
 
@@ -60,4 +98,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unloaded:
         hass.data[DOMAIN].pop(entry.entry_id)
+        if not hass.data[DOMAIN]:  # last entry gone -> remove the sidebar panel
+            from homeassistant.components import frontend
+
+            frontend.async_remove_panel(hass, PANEL_PATH)
     return unloaded

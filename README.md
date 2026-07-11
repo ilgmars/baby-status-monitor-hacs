@@ -30,6 +30,13 @@ cry detector's audio feed). "Camera online" covers the video stream as before.
 tile per status) - replace the placeholder credentials/host and adjust entity ids.
 Entity names carry a source tag: `[ML]` = local detectors, `[LLM]` = scene narration.
 
+### "Crib items" sidebar panel
+
+Since v0.9.0 the integration adds a **Crib items** entry to the HA sidebar - a full-page
+CCTV wall of the objects the monitor currently sees in the crib (hazards framed red).
+Nothing to install or configure: it appears after updating the integration and
+restarting HA, and it finds the crib-items sensor automatically.
+
 ### Crib-items CCTV card
 
 `www/crib-items-card.js` is a small dependency-free custom card that renders the
