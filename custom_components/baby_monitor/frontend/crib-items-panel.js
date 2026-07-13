@@ -110,7 +110,7 @@ class CribItemsPanel extends HTMLElement {
         const host = st && st.attributes.host ? st.attributes.host : "";
         const token = st && st.attributes.token ? st.attributes.token : "";
         if (it.id && host && token) {
-          bg = ` style="background: url('${host}/api/item-image/${it.id}?token=${token}') center/cover; box-shadow: inset 0 0 0 1000px rgba(0,0,0,0.6);"`;
+          bg = ` style="background: url('${host}/api/item-image/${it.id}?token=${token}&ts=${Date.now()}') center/cover; box-shadow: inset 0 0 0 1000px rgba(0,0,0,0.6);"`;
         }
         return `<div class="tile${haz}"${bg}>${corners}<span class="label">${esc(
           it.item || "object"
