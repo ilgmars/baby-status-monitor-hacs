@@ -86,4 +86,9 @@ class BabySceneSensor(BabyEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self):
-        return self._scene
+        attrs = dict(self._scene)
+        if self._field == "items":
+            entry_data = self.coordinator.config_entry.data
+            attrs["host"] = entry_data["host"].rstrip("/")
+            attrs["token"] = entry_data["token"]
+        return attrs
