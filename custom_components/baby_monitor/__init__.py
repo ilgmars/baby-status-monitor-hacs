@@ -50,7 +50,7 @@ async def _async_register_panel(hass: HomeAssistant) -> None:
         webcomponent_name="crib-items-panel",
         sidebar_title="Crib items",
         sidebar_icon="mdi:cctv",
-        module_url=f"{PANEL_URL}?v=0.9.8",
+        module_url=f"{PANEL_URL}?v=0.9.9",
         embed_iframe=False,
         require_admin=False,
     )
