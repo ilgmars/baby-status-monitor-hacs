@@ -1,6 +1,6 @@
 {
   "domain": "baby_monitor",
-  "name": "Baby Status Monitor",
+  "name": "Baby Monitor",
   "codeowners": [
     "@ilgmars"
   ],
@@ -9,7 +9,7 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/ilgmars/baby-status-monitor-hacs/issues",
   "requirements": [],
-  "version": "0.9.5",
+  "version": "0.9.6",
   "dependencies": [
     "http",
     "panel_custom"
