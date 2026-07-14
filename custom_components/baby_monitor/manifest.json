@@ -12,6 +12,7 @@
   "version": "0.9.6",
   "dependencies": [
     "http",
-    "panel_custom"
+    "panel_custom",
+    "ffmpeg"
   ]
 }
