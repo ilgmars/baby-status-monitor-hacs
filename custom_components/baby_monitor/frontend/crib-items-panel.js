@@ -50,14 +50,26 @@ class CribItemsPanel extends HTMLElement {
           @media (prefers-reduced-motion: reduce) { .dot { animation: none; } }
           .grid {
             display: grid; gap: 14px;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            height: calc(100vh - 100px);
+          }
+          @media (max-width: 800px) {
+            .grid {
+              grid-template-columns: 1fr;
+              grid-template-rows: auto;
+              height: auto;
+            }
           }
           .tile {
-            aspect-ratio: 4 / 3; border: 1px solid #1e2a1e; border-radius: 6px;
+            border: 1px solid #1e2a1e; border-radius: 6px;
             background: radial-gradient(ellipse at center, #12180f 0%, #070a07 100%);
             position: relative; display: flex; align-items: center; justify-content: center;
             text-align: center; padding: 10px; font-size: 16px; word-break: break-word;
             overflow: hidden;
+          }
+          @media (max-width: 800px) {
+            .tile { aspect-ratio: 4 / 3; }
           }
           .tile::after {
             content: ""; position: absolute; inset: 0; pointer-events: none;
@@ -102,8 +114,8 @@ class CribItemsPanel extends HTMLElement {
       return tb - ta;
     });
 
-    const cells = sortedItems.slice(0, 12); // limit to some max
-    while (cells.length < 6) cells.push(null);
+    const cells = sortedItems.slice(0, 9); // max 9 items
+    while (cells.length < 9) cells.push(null);
 
     const corners =
       '<i class="corner c0"></i><i class="corner c1"></i>' +

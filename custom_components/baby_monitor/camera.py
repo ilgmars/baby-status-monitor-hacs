@@ -29,6 +29,7 @@ class BabyCamera(Camera):
     _attr_has_entity_name = True
     _attr_name = "Live"
     _attr_supported_features = CameraEntityFeature.STREAM
+    _attr_frame_interval = 20.0
 
     def __init__(self, entry) -> None:
         super().__init__()
