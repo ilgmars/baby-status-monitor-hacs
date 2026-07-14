@@ -59,6 +59,8 @@ class BabySceneSensor(BabyEntity, SensorEntity):
         self._topic_key = key
         self._field = field
         self._attr_icon = icon
+        self._api_host = entry.data.get("host", "").rstrip("/")
+        self._api_token = entry.data.get("token", "")
 
     @property
     def _scene(self) -> dict:
@@ -88,6 +90,6 @@ class BabySceneSensor(BabyEntity, SensorEntity):
     def extra_state_attributes(self):
         attrs = dict(self._scene)
         if self._field == "items":
-            attrs["_api_host"] = self.entry.data.get("host", "").rstrip("/")
-            attrs["_api_token"] = self.entry.data.get("token", "")
+            attrs["_api_host"] = self._api_host
+            attrs["_api_token"] = self._api_token
         return attrs
