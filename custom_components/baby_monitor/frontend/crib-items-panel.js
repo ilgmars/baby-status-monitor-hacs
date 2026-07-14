@@ -67,15 +67,18 @@ class CribItemsPanel extends HTMLElement {
           .tile.empty { color: #24361f; }
           .tile.hazard { border-color: #ff5252; color: #ff8a8a; }
           .corner { position: absolute; width: 11px; height: 11px;
-                    border: 2px solid #4fdf6a; opacity: .6; }
+                    border: 2px solid #4fdf6a; opacity: .6; z-index: 2; }
           .tile.hazard .corner { border-color: #ff5252; }
           .c0 { top: 5px; left: 5px; border-right: 0; border-bottom: 0; }
           .c1 { top: 5px; right: 5px; border-left: 0; border-bottom: 0; }
           .c2 { bottom: 5px; left: 5px; border-right: 0; border-top: 0; }
           .c3 { bottom: 5px; right: 5px; border-left: 0; border-top: 0; }
-          .label { z-index: 1; }
-          .flag { position: absolute; bottom: 7px; left: 0; right: 0;
-                  font-size: 11px; letter-spacing: 1px; color: #ff5252; }
+          .label { z-index: 2; background: rgba(0,0,0,0.7); padding: 4px 8px; border-radius: 4px; }
+          .flag { position: absolute; bottom: 7px; left: 0; right: 0; z-index: 2;
+                  font-size: 11px; letter-spacing: 1px; color: #ff5252; background: rgba(0,0,0,0.7); }
+          .badge-new { position: absolute; top: 7px; right: 7px; background: #4fdf6a; color: #000; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; z-index: 2; }
+          .timestamp { position: absolute; top: 7px; left: 7px; background: rgba(0,0,0,0.7); color: #4fdf6a; font-size: 10px; padding: 2px 4px; border-radius: 4px; z-index: 2; }
+          .crop-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.6; z-index: 0; mix-blend-mode: screen; filter: grayscale(100%) sepia(100%) hue-rotate(80deg) saturate(300%) contrast(1.5); }
           .note { margin-top: 16px; font-size: 12px; color: #6f8570; }
         </style>
         <div class="wall">
@@ -91,7 +94,15 @@ class CribItemsPanel extends HTMLElement {
 
     const st = this._findState();
     const items = st ? st.attributes.items || [] : [];
-    const cells = items.slice();
+    
+    // Sort items by newest (first_seen descending)
+    const sortedItems = items.slice().sort((a, b) => {
+      const ta = a.first_seen || 0;
+      const tb = b.first_seen || 0;
+      return tb - ta;
+    });
+
+    const cells = sortedItems.slice(0, 12); // limit to some max
     while (cells.length < 6) cells.push(null);
 
     const corners =
@@ -101,25 +112,40 @@ class CribItemsPanel extends HTMLElement {
       String(s).replace(/[&<>"']/g, (c) =>
         ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
+    const apiHost = st && st.attributes._api_host ? st.attributes._api_host : "";
+    const apiToken = st && st.attributes._api_token ? st.attributes._api_token : "";
+
     this.shadowRoot.querySelector(".grid").innerHTML = cells
       .map((it) => {
         if (!it) return `<div class="tile empty">${corners}<span class="label">- - -</span></div>`;
         const haz = it.hazard ? " hazard" : "";
         const flag = it.hazard ? '<span class="flag">&#9888; HAZARD</span>' : "";
-        let bg = "";
-        const host = st && st.attributes.host ? st.attributes.host : "";
-        const token = st && st.attributes.token ? st.attributes.token : "";
-        if (it.id && host && token) {
-          bg = ` style="background: url('${host}/api/item-image/${it.id}?token=${token}&ts=${Date.now()}') center/cover; box-shadow: inset 0 0 0 1000px rgba(0,0,0,0.6);"`;
+        
+        let newBadge = "";
+        let timeLabel = "";
+        if (it.first_seen) {
+          const isNew = (Date.now() / 1000 - it.first_seen) <= 600;
+          if (isNew) {
+            newBadge = '<span class="badge-new">NEW</span>';
+          }
+          const d = new Date(it.first_seen * 1000);
+          timeLabel = `<span class="timestamp">${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false})}</span>`;
         }
-        return `<div class="tile${haz}"${bg}>${corners}<span class="label">${esc(
+
+        let imgHtml = "";
+        if (it.id && apiHost) {
+          const src = `${apiHost}/api/item-image/${it.id}?token=${apiToken}`;
+          imgHtml = `<img class="crop-img" src="${esc(src)}" onerror="this.style.display='none'">`;
+        }
+
+        return `<div class="tile${haz}">${corners}${imgHtml}${timeLabel}${newBadge}<span class="label">${esc(
           it.item || "object"
         )}</span>${flag}</div>`;
       })
       .join("");
 
     this.shadowRoot.querySelector(".title").innerHTML =
-      `Crib camera &mdash; objects&nbsp;&nbsp;${new Date().toLocaleTimeString()}`;
+      `Crib camera &mdash; objects&nbsp;&nbsp;${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit', hour12: false})}`;
     this.shadowRoot.querySelector(".note").textContent = st
       ? `source: ${st.entity_id}`
       : "waiting for the crib-items sensor (update the Baby Monitor integration)...";
