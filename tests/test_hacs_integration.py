@@ -236,3 +236,59 @@ def test_config_flow_connection_error(mock_session_factory):
     result = asyncio.run(flow.async_step_user(user_input))
     assert result["type"] == "form"
     assert result["errors"]["base"] == "cannot_connect"
+
+
+@patch("custom_components.baby_monitor.config_flow.async_create_clientsession")
+def test_config_flow_non_200_failure(mock_session_factory):
+    hass = MagicMock()
+    flow = BabyMonitorConfigFlow()
+    flow.hass = hass
+
+    mock_resp = AsyncMock()
+    mock_resp.status = 500
+    mock_session = AsyncMock()
+    mock_session.get.return_value = mock_resp
+    mock_session_factory.return_value = mock_session
+
+    result = asyncio.run(
+        flow.async_step_user({"host": "https://192.168.1.10", "token": "token"})
+    )
+    assert result["type"] == "form"
+    assert result["errors"]["base"] == "cannot_connect"
+
+
+class FakeCoordinator:
+    def __init__(self, *args, update_method=None, **kwargs) -> None:
+        self._update_method = update_method
+        self.data = {}
+
+    async def async_config_entry_first_refresh(self):
+        self.data = await self._update_method()
+
+
+@patch("custom_components.baby_monitor._async_register_panel", new_callable=AsyncMock)
+@patch("custom_components.baby_monitor.async_create_clientsession")
+@patch("custom_components.baby_monitor.DataUpdateCoordinator", new=FakeCoordinator)
+def test_setup_unload_entry_lifecycle(mock_session_factory, _mock_panel):
+    hass = MagicMock()
+    hass.data = {}
+    hass.config_entries.async_forward_entry_setups = AsyncMock()
+    hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
+
+    entry = MagicMock()
+    entry.entry_id = "entry_1"
+    entry.data = {"host": "https://192.168.1.10", "token": "token"}
+
+    mock_resp = MagicMock()
+    mock_resp.status = 200
+    mock_resp.raise_for_status.return_value = None
+    mock_resp.json = AsyncMock(return_value={"baby/status/present": {"value": True}})
+    mock_session = AsyncMock()
+    mock_session.get.return_value = mock_resp
+    mock_session_factory.return_value = mock_session
+
+    assert asyncio.run(async_setup_entry(hass, entry)) is True
+    assert hass.data["baby_monitor"][entry.entry_id].data["present"] is True
+
+    assert asyncio.run(async_unload_entry(hass, entry)) is True
+    assert entry.entry_id not in hass.data["baby_monitor"]
