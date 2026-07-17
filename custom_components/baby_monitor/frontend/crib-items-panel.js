@@ -113,10 +113,14 @@ class CribItemsPanel extends HTMLElement {
       return tb - ta;
     });
 
-    const pageCount = Math.max(1, Math.ceil(sortedItems.length / 9));
+    const pageSize = 9;
+    const pageCount = Math.max(1, Math.ceil(sortedItems.length / pageSize));
     const page = Math.floor(Date.now() / 15000) % pageCount;
-    const cells = sortedItems.slice(page * 9, page * 9 + 9);
-    while (cells.length < 9) cells.push(null);
+    let cells = sortedItems.slice(page * pageSize, page * pageSize + pageSize);
+    if (cells.length && cells.length < pageSize && sortedItems.length >= pageSize) {
+      cells = sortedItems.slice(0, pageSize - cells.length).concat(cells);
+    }
+    while (cells.length < pageSize) cells.push(null);
 
     const esc = (s) =>
       String(s).replace(/[&<>"']/g, (c) =>
