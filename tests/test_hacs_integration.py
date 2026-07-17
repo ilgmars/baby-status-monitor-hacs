@@ -317,9 +317,10 @@ class FakeCoordinator:
 
 
 @patch("custom_components.baby_monitor._async_register_panel", new_callable=AsyncMock)
+@patch("custom_components.baby_monitor.async_register_item_image_view", new_callable=AsyncMock)
 @patch("custom_components.baby_monitor.async_create_clientsession")
 @patch("custom_components.baby_monitor.DataUpdateCoordinator", new=FakeCoordinator)
-def test_setup_unload_entry_lifecycle(mock_session_factory, _mock_panel):
+def test_setup_unload_entry_lifecycle(mock_session_factory, _mock_image_view, _mock_panel):
     hass = MagicMock()
     hass.data = {}
     hass.http.register_view = MagicMock()
