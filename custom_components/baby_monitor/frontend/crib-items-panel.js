@@ -41,11 +41,6 @@ class CribItemsPanel extends HTMLElement {
             font-size: 14px; font-weight: bold; text-transform: uppercase;
             margin-bottom: 18px; opacity: .9;
           }
-          .rec { display: flex; align-items: center; gap: 8px; color: #ff5252; }
-          .dot { width: 10px; height: 10px; border-radius: 50%; background: #ff5252;
-                 animation: blink 1.4s steps(1) infinite; }
-          @keyframes blink { 50% { opacity: 0; } }
-          @media (prefers-reduced-motion: reduce) { .dot { animation: none; } }
           .grid {
             display: grid; gap: 14px;
             grid-template-columns: repeat(3, 1fr);
@@ -71,6 +66,8 @@ class CribItemsPanel extends HTMLElement {
           }
           .tile.empty { color: var(--disabled-text-color, #777); }
           .tile.hazard { border-color: #ff5252; color: #ff8a8a; }
+          .tile.warning { border-color: #ffb300; color: #ffd27a; }
+          .tile.state-empty { grid-column: 1 / -1; grid-row: 1 / -1; }
           .label { z-index: 2; background: rgba(0,0,0,0.7); color: #fff; padding: 4px 8px; border-radius: 4px; font-weight: 500; }
           .caption {
             position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
@@ -92,8 +89,7 @@ class CribItemsPanel extends HTMLElement {
         </style>
         <div class="wall">
           <div class="bar">
-            <span class="title">Crib camera &mdash; objects</span>
-            <span class="rec"><span class="dot"></span><span>LIVE</span></span>
+            <span class="title">Crib camera &mdash; alerts</span>
           </div>
           <div class="grid"></div>
           <div class="note"></div>
@@ -105,9 +101,9 @@ class CribItemsPanel extends HTMLElement {
     const currentItems = st && Array.isArray(st.attributes.items) ? st.attributes.items : [];
     const historyItems = st && Array.isArray(st.attributes.history) ? st.attributes.history : [];
     const items = historyItems.length ? historyItems : currentItems;
-    
-    // Sort items by newest (first_seen descending)
-    const sortedItems = items.slice().sort((a, b) => {
+
+    const alertItems = items.filter((it) => it && (it.hazard || it.warning || it.alarm));
+    const sortedItems = alertItems.slice().sort((a, b) => {
       const ta = a.first_seen || 0;
       const tb = b.first_seen || 0;
       return tb - ta;
@@ -129,40 +125,47 @@ class CribItemsPanel extends HTMLElement {
     const apiHost = st && st.attributes._api_host ? st.attributes._api_host : "";
     const apiToken = st && st.attributes._api_token ? st.attributes._api_token : "";
 
-    this.shadowRoot.querySelector(".grid").innerHTML = cells
-      .map((it) => {
-        if (!it) return `<div class="tile empty"><span class="label">- - -</span></div>`;
-        const haz = it.hazard ? " hazard" : "";
-        const flag = it.hazard ? '<span class="flag">&#9888; HAZARD</span>' : "";
-        
-        let newBadge = "";
-        let timeLabel = "--:--";
-        if (it.first_seen) {
-          const isNew = (Date.now() / 1000 - it.first_seen) <= 600;
-          if (isNew) {
-            newBadge = '<span class="badge-new">NEW</span>';
+    const grid = this.shadowRoot.querySelector(".grid");
+    if (!sortedItems.length) {
+      grid.innerHTML = `<div class="tile empty state-empty"><span class="label">No warning or alarm items</span></div>`;
+    } else {
+      grid.innerHTML = cells
+        .map((it) => {
+          if (!it) return `<div class="tile empty"><span class="label">- - -</span></div>`;
+          const alarm = Boolean(it.hazard || it.alarm);
+          const alertLabel = alarm ? "ALARM" : "WARNING";
+          const alertClass = alarm ? " hazard" : " warning";
+          const flag = `<span class="flag">${esc(alertLabel)}</span>`;
+
+          let newBadge = "";
+          let timeLabel = "--:--";
+          if (it.first_seen) {
+            const isNew = (Date.now() / 1000 - it.first_seen) <= 600;
+            if (isNew) {
+              newBadge = '<span class="badge-new">NEW</span>';
+            }
+            const d = new Date(it.first_seen * 1000);
+            timeLabel = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
           }
-          const d = new Date(it.first_seen * 1000);
-          timeLabel = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
-        }
 
-        let imgHtml = "";
-        if (it.image_url) {
-          imgHtml = `<img class="crop-img" src="${esc(it.image_url)}" onerror="this.style.display='none'">`;
-        } else if (it.id && apiHost) {
-          const tokenQuery = apiToken ? `?token=${encodeURIComponent(apiToken)}` : "";
-          const src = `${apiHost}/api/item-image/${encodeURIComponent(it.id)}${tokenQuery}`;
-          imgHtml = `<img class="crop-img" src="${esc(src)}" onerror="this.style.display='none'">`;
-        }
+          let imgHtml = "";
+          if (it.image_url) {
+            imgHtml = `<img class="crop-img" src="${esc(it.image_url)}" onerror="this.style.display='none'">`;
+          } else if (it.id && apiHost) {
+            const tokenQuery = apiToken ? `?token=${encodeURIComponent(apiToken)}` : "";
+            const src = `${apiHost}/api/item-image/${encodeURIComponent(it.id)}${tokenQuery}`;
+            imgHtml = `<img class="crop-img" src="${esc(src)}" onerror="this.style.display='none'">`;
+          }
 
-        return `<div class="tile${haz}">${imgHtml}${newBadge}<div class="caption"><span class="caption-time">${esc(timeLabel)}</span><span class="caption-text">${esc(
-          it.item || "object"
-        )}</span></div>${flag}</div>`;
-      })
-      .join("");
+          return `<div class="tile${alertClass}">${imgHtml}${newBadge}<div class="caption"><span class="caption-time">${esc(timeLabel)}</span><span class="caption-text">${esc(
+            it.item || "object"
+          )}</span></div>${flag}</div>`;
+        })
+        .join("");
+    }
 
     this.shadowRoot.querySelector(".title").innerHTML =
-      `Crib camera &mdash; objects&nbsp;&nbsp;${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit', hour12: false})}`;
+      `Crib camera &mdash; alerts&nbsp;&nbsp;${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit', hour12: false})}`;
     this.shadowRoot.querySelector(".note").textContent = st
       ? `source: ${st.entity_id}${sortedItems.length > 9 ? ` · page ${page + 1}/${pageCount}` : ""}`
       : "waiting for the crib-items sensor (update the Baby Monitor integration)...";
