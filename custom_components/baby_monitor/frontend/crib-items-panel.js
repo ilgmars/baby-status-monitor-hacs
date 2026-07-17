@@ -102,7 +102,9 @@ class CribItemsPanel extends HTMLElement {
     }
 
     const st = this._findState();
-    const items = st ? st.attributes.items || [] : [];
+    const currentItems = st && Array.isArray(st.attributes.items) ? st.attributes.items : [];
+    const historyItems = st && Array.isArray(st.attributes.history) ? st.attributes.history : [];
+    const items = historyItems.length ? historyItems : currentItems;
     
     // Sort items by newest (first_seen descending)
     const sortedItems = items.slice().sort((a, b) => {
@@ -111,7 +113,9 @@ class CribItemsPanel extends HTMLElement {
       return tb - ta;
     });
 
-    const cells = sortedItems.slice(0, 9); // max 9 items
+    const pageCount = Math.max(1, Math.ceil(sortedItems.length / 9));
+    const page = Math.floor(Date.now() / 15000) % pageCount;
+    const cells = sortedItems.slice(page * 9, page * 9 + 9);
     while (cells.length < 9) cells.push(null);
 
     const esc = (s) =>
@@ -156,7 +160,7 @@ class CribItemsPanel extends HTMLElement {
     this.shadowRoot.querySelector(".title").innerHTML =
       `Crib camera &mdash; objects&nbsp;&nbsp;${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit', hour12: false})}`;
     this.shadowRoot.querySelector(".note").textContent = st
-      ? `source: ${st.entity_id}`
+      ? `source: ${st.entity_id}${sortedItems.length > 9 ? ` · page ${page + 1}/${pageCount}` : ""}`
       : "waiting for the crib-items sensor (update the Baby Monitor integration)...";
   }
 }

@@ -92,9 +92,11 @@ class BabySceneSensor(BabyEntity, SensorEntity):
     def extra_state_attributes(self):
         attrs = dict(self._scene)
         if self._field == "items":
-            items = attrs.get("items")
-            if isinstance(items, list):
-                attrs["items"] = [
+            for key in ("items", "history"):
+                items = attrs.get(key)
+                if not isinstance(items, list):
+                    continue
+                attrs[key] = [
                     {
                         **item,
                         "image_url": item_image_url(

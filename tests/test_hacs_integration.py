@@ -131,6 +131,7 @@ def test_sensor_entities():
             "description": "Baby is sleeping peacefully",
             "position": "back",
             "items": [{"id": "abc123", "item": "pacifier", "hazard": False}],
+            "history": [{"id": "old123", "item": "toy", "hazard": False}],
         },
         "health": {
             "llm": "ok",
@@ -162,6 +163,9 @@ def test_sensor_entities():
     assert "_api_token" not in items_sensor.extra_state_attributes
     assert items_sensor.extra_state_attributes["items"][0]["image_url"] == item_image_url(
         "test_entry", "abc123", "test-token"
+    )
+    assert items_sensor.extra_state_attributes["history"][0]["image_url"] == item_image_url(
+        "test_entry", "old123", "test-token"
     )
 
     # Test health mapping
