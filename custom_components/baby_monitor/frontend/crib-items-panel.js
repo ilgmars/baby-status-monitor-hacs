@@ -72,10 +72,21 @@ class CribItemsPanel extends HTMLElement {
           .tile.empty { color: var(--disabled-text-color, #777); }
           .tile.hazard { border-color: #ff5252; color: #ff8a8a; }
           .label { z-index: 2; background: rgba(0,0,0,0.7); color: #fff; padding: 4px 8px; border-radius: 4px; font-weight: 500; }
-          .flag { position: absolute; bottom: 7px; left: 0; right: 0; z-index: 2;
-                  font-size: 11px; letter-spacing: 1px; color: #ff5252; background: rgba(0,0,0,0.7); font-weight: bold; }
+          .caption {
+            position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+            display: flex; align-items: center; gap: 10px; justify-content: flex-start;
+            padding: 8px 10px; box-sizing: border-box;
+            background: linear-gradient(transparent, rgba(0,0,0,0.82) 28%, rgba(0,0,0,0.88));
+            color: #fff; text-align: left; font-weight: 600;
+          }
+          .caption-time {
+            flex: 0 0 auto; font-family: monospace; font-size: 12px;
+            background: rgba(0,0,0,0.7); padding: 2px 5px; border-radius: 4px;
+          }
+          .caption-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+          .flag { position: absolute; top: 7px; left: 7px; z-index: 2;
+                  font-size: 11px; letter-spacing: 1px; color: #ff5252; background: rgba(0,0,0,0.7); font-weight: bold; padding: 2px 6px; border-radius: 4px; }
           .badge-new { position: absolute; top: 7px; right: 7px; background: #2196F3; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; z-index: 2; }
-          .timestamp { position: absolute; top: 7px; left: 7px; background: rgba(0,0,0,0.7); color: #fff; font-size: 10px; padding: 2px 4px; border-radius: 4px; z-index: 2; }
           .crop-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.85; z-index: 0; }
           .note { margin-top: 16px; font-size: 12px; color: var(--secondary-text-color, #aaa); }
         </style>
@@ -117,14 +128,14 @@ class CribItemsPanel extends HTMLElement {
         const flag = it.hazard ? '<span class="flag">&#9888; HAZARD</span>' : "";
         
         let newBadge = "";
-        let timeLabel = "";
+        let timeLabel = "--:--";
         if (it.first_seen) {
           const isNew = (Date.now() / 1000 - it.first_seen) <= 600;
           if (isNew) {
             newBadge = '<span class="badge-new">NEW</span>';
           }
           const d = new Date(it.first_seen * 1000);
-          timeLabel = `<span class="timestamp">${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false})}</span>`;
+          timeLabel = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
         }
 
         let imgHtml = "";
@@ -136,9 +147,9 @@ class CribItemsPanel extends HTMLElement {
           imgHtml = `<img class="crop-img" src="${esc(src)}" onerror="this.style.display='none'">`;
         }
 
-        return `<div class="tile${haz}">${imgHtml}${timeLabel}${newBadge}<span class="label">${esc(
+        return `<div class="tile${haz}">${imgHtml}${newBadge}<div class="caption"><span class="caption-time">${esc(timeLabel)}</span><span class="caption-text">${esc(
           it.item || "object"
-        )}</span>${flag}</div>`;
+        )}</span></div>${flag}</div>`;
       })
       .join("");
 
