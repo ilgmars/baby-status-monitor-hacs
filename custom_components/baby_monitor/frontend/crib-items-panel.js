@@ -128,8 +128,11 @@ class CribItemsPanel extends HTMLElement {
         }
 
         let imgHtml = "";
-        if (it.id && apiHost) {
-          const src = `${apiHost}/api/item-image/${it.id}?token=${apiToken}`;
+        if (it.image_url) {
+          imgHtml = `<img class="crop-img" src="${esc(it.image_url)}" onerror="this.style.display='none'">`;
+        } else if (it.id && apiHost) {
+          const tokenQuery = apiToken ? `?token=${encodeURIComponent(apiToken)}` : "";
+          const src = `${apiHost}/api/item-image/${encodeURIComponent(it.id)}${tokenQuery}`;
           imgHtml = `<img class="crop-img" src="${esc(src)}" onerror="this.style.display='none'">`;
         }
 

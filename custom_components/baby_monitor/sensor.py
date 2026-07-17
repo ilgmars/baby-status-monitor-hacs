@@ -6,6 +6,7 @@ from homeassistant.components.sensor import SensorEntity
 
 from .const import DOMAIN
 from .entity import BabyEntity
+from .image_proxy import item_image_url
 
 # (key, name, unit)
 SENSORS = [
@@ -61,6 +62,7 @@ class BabySceneSensor(BabyEntity, SensorEntity):
         self._attr_icon = icon
         self._api_host = entry.data.get("host", "").rstrip("/")
         self._api_token = entry.data.get("token", "")
+        self._entry_id = entry.entry_id
 
     @property
     def _scene(self) -> dict:
@@ -90,6 +92,18 @@ class BabySceneSensor(BabyEntity, SensorEntity):
     def extra_state_attributes(self):
         attrs = dict(self._scene)
         if self._field == "items":
+            items = attrs.get("items")
+            if isinstance(items, list):
+                attrs["items"] = [
+                    {
+                        **item,
+                        "image_url": item_image_url(
+                            self._entry_id, str(item["id"]), self._api_token
+                        ),
+                    }
+                    if isinstance(item, dict) and item.get("id")
+                    else item
+                    for item in items
+                ]
             attrs["_api_host"] = self._api_host
-            attrs["_api_token"] = self._api_token
         return attrs

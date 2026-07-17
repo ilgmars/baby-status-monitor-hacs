@@ -16,12 +16,13 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .image_proxy import async_register_item_image_view
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.CAMERA]
 PANEL_URL = "/baby-monitor-frontend/crib-items-panel.js"
 PANEL_PATH = "crib-items"
-PANEL_VERSION = "0.9.11"
+PANEL_VERSION = "0.9.12"
 
 
 async def _async_register_panel(hass: HomeAssistant) -> None:
@@ -88,6 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    await async_register_item_image_view(hass)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     try:
         await _async_register_panel(hass)

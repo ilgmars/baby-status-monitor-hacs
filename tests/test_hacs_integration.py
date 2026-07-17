@@ -100,6 +100,8 @@ sys.modules["homeassistant.components.camera"] = MagicMock()
 sys.modules["homeassistant.components.camera"].Camera = MockCamera
 sys.modules["homeassistant.components.camera"].CameraEntityFeature = MagicMock()
 sys.modules["homeassistant.components.ffmpeg"] = MagicMock()
+sys.modules["homeassistant.components.http"] = MagicMock()
+sys.modules["homeassistant.components.http"].HomeAssistantView = object
 sys.modules["homeassistant.components.panel_custom"] = MagicMock()
 
 # Now import the custom component modules
@@ -111,6 +113,11 @@ from custom_components.baby_monitor import (  # noqa: E402
 from custom_components.baby_monitor.binary_sensor import BabyBinary, BabySceneBinary  # noqa: E402
 from custom_components.baby_monitor.camera import BabyCamera  # noqa: E402
 from custom_components.baby_monitor.config_flow import BabyMonitorConfigFlow  # noqa: E402
+from custom_components.baby_monitor.image_proxy import (  # noqa: E402
+    item_image_sig,
+    item_image_url,
+    valid_item_id,
+)
 from custom_components.baby_monitor.sensor import BabySceneSensor, BabySensor  # noqa: E402
 
 
@@ -123,7 +130,7 @@ def test_sensor_entities():
         "scene": {
             "description": "Baby is sleeping peacefully",
             "position": "back",
-            "items": [{"item": "pacifier", "hazard": False}],
+            "items": [{"id": "abc123", "item": "pacifier", "hazard": False}],
         },
         "health": {
             "llm": "ok",
@@ -132,6 +139,7 @@ def test_sensor_entities():
     }
     entry = MagicMock()
     entry.entry_id = "test_entry"
+    entry.data = {"host": "http://test-host/", "token": "test-token"}
 
     # Test standard sensor
     sensor = BabySensor(coordinator, entry, "respiration_rate", "Respiration rate [ML]", "bpm")
@@ -150,6 +158,11 @@ def test_sensor_entities():
         coordinator, entry, "scene", "Crib items [LLM]", "items", "mdi:cube-scan"
     )
     assert items_sensor.native_value == "pacifier"
+    assert items_sensor.extra_state_attributes["_api_host"] == "http://test-host"
+    assert "_api_token" not in items_sensor.extra_state_attributes
+    assert items_sensor.extra_state_attributes["items"][0]["image_url"] == item_image_url(
+        "test_entry", "abc123", "test-token"
+    )
 
     # Test health mapping
     health_sensor = BabySceneSensor(
@@ -190,6 +203,14 @@ def test_panel_version_matches_manifest():
     manifest = Path("custom_components/baby_monitor/manifest.json")
     version = json.loads(manifest.read_text())["version"]
     assert PANEL_VERSION == version
+
+
+def test_item_image_urls_are_signed():
+    url = item_image_url("entry_1", "abc123", "secret")
+    assert url.startswith("/api/baby_monitor/entry_1/item-image/abc123?sig=")
+    assert url.endswith(item_image_sig("entry_1", "abc123", "secret"))
+    assert valid_item_id("abc_123-x")
+    assert not valid_item_id("../abc")
 
 
 def test_camera_entity():
@@ -301,6 +322,7 @@ class FakeCoordinator:
 def test_setup_unload_entry_lifecycle(mock_session_factory, _mock_panel):
     hass = MagicMock()
     hass.data = {}
+    hass.http.register_view = MagicMock()
     hass.config_entries.async_forward_entry_setups = AsyncMock()
     hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
 
