@@ -12,6 +12,7 @@ BINARY = [
     ("present", "Baby present [ML]", "occupancy"),
     ("breathing_detected", "Breathing detected [ML]", None),
     ("breathing_degraded", "Breathing detection degraded [ML]", "problem"),
+    ("breathing_alarm", "Breathing alarm [ML]", "problem"),
     ("crying", "Crying [ML]", "sound"),
     ("movement", "Movement [ML]", "motion"),
     ("camera_online", "Camera online", "connectivity"),

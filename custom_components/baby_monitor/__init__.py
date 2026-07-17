@@ -21,6 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.CAMERA]
 PANEL_URL = "/baby-monitor-frontend/crib-items-panel.js"
 PANEL_PATH = "crib-items"
+PANEL_VERSION = "0.9.11"
 
 
 async def _async_register_panel(hass: HomeAssistant) -> None:
@@ -50,7 +51,7 @@ async def _async_register_panel(hass: HomeAssistant) -> None:
         webcomponent_name="crib-items-panel",
         sidebar_title="Crib items",
         sidebar_icon="mdi:cctv",
-        module_url=f"{PANEL_URL}?v=0.9.9",
+        module_url=f"{PANEL_URL}?v={PANEL_VERSION}",
         embed_iframe=False,
         require_admin=False,
     )
