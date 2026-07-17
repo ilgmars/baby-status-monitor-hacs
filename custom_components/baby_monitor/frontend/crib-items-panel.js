@@ -32,15 +32,13 @@ class CribItemsPanel extends HTMLElement {
       this.attachShadow({ mode: "open" });
       this.shadowRoot.innerHTML = `
         <style>
-          :host { display: block; height: 100%; background: #06080a; }
+          :host { display: block; height: 100%; background: var(--primary-background-color, #111); color: var(--primary-text-color, #eee); font-family: sans-serif; }
           .wall {
             min-height: 100%; padding: 24px; box-sizing: border-box;
-            font-family: "Courier New", monospace; color: #4fdf6a;
-            background: radial-gradient(1200px 700px at 50% -10%, #0d1410 0%, #06080a 60%);
           }
           .bar {
             display: flex; justify-content: space-between; align-items: center;
-            font-size: 14px; letter-spacing: 2px; text-transform: uppercase;
+            font-size: 14px; font-weight: bold; text-transform: uppercase;
             margin-bottom: 18px; opacity: .9;
           }
           .rec { display: flex; align-items: center; gap: 8px; color: #ff5252; }
@@ -62,8 +60,8 @@ class CribItemsPanel extends HTMLElement {
             }
           }
           .tile {
-            border: 1px solid #1e2a1e; border-radius: 6px;
-            background: radial-gradient(ellipse at center, #12180f 0%, #070a07 100%);
+            border: 1px solid var(--divider-color, #333); border-radius: 6px;
+            background: var(--secondary-background-color, #222);
             position: relative; display: flex; align-items: center; justify-content: center;
             text-align: center; padding: 10px; font-size: 16px; word-break: break-word;
             overflow: hidden;
@@ -71,32 +69,20 @@ class CribItemsPanel extends HTMLElement {
           @media (max-width: 800px) {
             .tile { aspect-ratio: 4 / 3; }
           }
-          .tile::after {
-            content: ""; position: absolute; inset: 0; pointer-events: none;
-            background: repeating-linear-gradient(0deg, rgba(0,0,0,0) 0 2px,
-              rgba(0,0,0,0.18) 3px, rgba(0,0,0,0) 4px);
-          }
-          .tile.empty { color: #24361f; }
+          .tile.empty { color: var(--disabled-text-color, #777); }
           .tile.hazard { border-color: #ff5252; color: #ff8a8a; }
-          .corner { position: absolute; width: 11px; height: 11px;
-                    border: 2px solid #4fdf6a; opacity: .6; z-index: 2; }
-          .tile.hazard .corner { border-color: #ff5252; }
-          .c0 { top: 5px; left: 5px; border-right: 0; border-bottom: 0; }
-          .c1 { top: 5px; right: 5px; border-left: 0; border-bottom: 0; }
-          .c2 { bottom: 5px; left: 5px; border-right: 0; border-top: 0; }
-          .c3 { bottom: 5px; right: 5px; border-left: 0; border-top: 0; }
-          .label { z-index: 2; background: rgba(0,0,0,0.7); padding: 4px 8px; border-radius: 4px; }
+          .label { z-index: 2; background: rgba(0,0,0,0.7); color: #fff; padding: 4px 8px; border-radius: 4px; font-weight: 500; }
           .flag { position: absolute; bottom: 7px; left: 0; right: 0; z-index: 2;
-                  font-size: 11px; letter-spacing: 1px; color: #ff5252; background: rgba(0,0,0,0.7); }
-          .badge-new { position: absolute; top: 7px; right: 7px; background: #4fdf6a; color: #000; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; z-index: 2; }
-          .timestamp { position: absolute; top: 7px; left: 7px; background: rgba(0,0,0,0.7); color: #4fdf6a; font-size: 10px; padding: 2px 4px; border-radius: 4px; z-index: 2; }
-          .crop-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.6; z-index: 0; mix-blend-mode: screen; filter: grayscale(100%) sepia(100%) hue-rotate(80deg) saturate(300%) contrast(1.5); }
-          .note { margin-top: 16px; font-size: 12px; color: #6f8570; }
+                  font-size: 11px; letter-spacing: 1px; color: #ff5252; background: rgba(0,0,0,0.7); font-weight: bold; }
+          .badge-new { position: absolute; top: 7px; right: 7px; background: #2196F3; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; z-index: 2; }
+          .timestamp { position: absolute; top: 7px; left: 7px; background: rgba(0,0,0,0.7); color: #fff; font-size: 10px; padding: 2px 4px; border-radius: 4px; z-index: 2; }
+          .crop-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.85; z-index: 0; }
+          .note { margin-top: 16px; font-size: 12px; color: var(--secondary-text-color, #aaa); }
         </style>
         <div class="wall">
           <div class="bar">
             <span class="title">Crib camera &mdash; objects</span>
-            <span class="rec"><span class="dot"></span><span>REC</span></span>
+            <span class="rec"><span class="dot"></span><span>LIVE</span></span>
           </div>
           <div class="grid"></div>
           <div class="note"></div>
@@ -117,9 +103,6 @@ class CribItemsPanel extends HTMLElement {
     const cells = sortedItems.slice(0, 9); // max 9 items
     while (cells.length < 9) cells.push(null);
 
-    const corners =
-      '<i class="corner c0"></i><i class="corner c1"></i>' +
-      '<i class="corner c2"></i><i class="corner c3"></i>';
     const esc = (s) =>
       String(s).replace(/[&<>"']/g, (c) =>
         ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -129,7 +112,7 @@ class CribItemsPanel extends HTMLElement {
 
     this.shadowRoot.querySelector(".grid").innerHTML = cells
       .map((it) => {
-        if (!it) return `<div class="tile empty">${corners}<span class="label">- - -</span></div>`;
+        if (!it) return `<div class="tile empty"><span class="label">- - -</span></div>`;
         const haz = it.hazard ? " hazard" : "";
         const flag = it.hazard ? '<span class="flag">&#9888; HAZARD</span>' : "";
         
@@ -150,7 +133,7 @@ class CribItemsPanel extends HTMLElement {
           imgHtml = `<img class="crop-img" src="${esc(src)}" onerror="this.style.display='none'">`;
         }
 
-        return `<div class="tile${haz}">${corners}${imgHtml}${timeLabel}${newBadge}<span class="label">${esc(
+        return `<div class="tile${haz}">${imgHtml}${timeLabel}${newBadge}<span class="label">${esc(
           it.item || "object"
         )}</span>${flag}</div>`;
       })
