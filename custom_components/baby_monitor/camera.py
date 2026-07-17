@@ -1,13 +1,16 @@
-"""Live camera entity backed by the go2rtc RTSP restream (real video, not snapshots)."""
+"""Camera entity backed by the dashboard's authenticated still snapshot endpoint."""
 
 from __future__ import annotations
 
+import time
 from urllib.parse import urlparse
 
-from homeassistant.components.camera import Camera, CameraEntityFeature
-from homeassistant.components.ffmpeg import async_get_image
+from homeassistant.components.camera import Camera
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import DOMAIN
+
+SNAPSHOT_TTL_S = 60.0
 
 
 def _stream_url(entry) -> str:
@@ -28,11 +31,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class BabyCamera(Camera):
     _attr_has_entity_name = True
     _attr_name = "Live"
-    _attr_supported_features = CameraEntityFeature.STREAM
 
     def __init__(self, entry) -> None:
         super().__init__()
+        host = entry.data["host"].rstrip("/")
         self._stream = _stream_url(entry)
+        self._snapshot_url = f"{host}/api/camera-snapshot"
+        self._headers = {"Authorization": f"Bearer {entry.data['token']}"}
+        self._snapshot: bytes | None = None
+        self._snapshot_ts = 0.0
         self._attr_unique_id = f"{entry.entry_id}_camera"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.entry_id)},
@@ -43,11 +50,18 @@ class BabyCamera(Camera):
     @property
     def frame_interval(self) -> float:
         """Return the frame interval."""
-        return 20.0
+        return SNAPSHOT_TTL_S
 
     async def stream_source(self) -> str:
         return self._stream
 
     async def async_camera_image(self, width=None, height=None):
-        # A frame grabbed by ffmpeg for the card preview; the live stream plays on click.
-        return await async_get_image(self.hass, self._stream, width=width, height=height)
+        if self._snapshot and time.monotonic() - self._snapshot_ts < SNAPSHOT_TTL_S:
+            return self._snapshot
+        session = async_create_clientsession(self.hass, verify_ssl=False)
+        async with session.get(self._snapshot_url, headers=self._headers) as resp:
+            if resp.status != 200:
+                return self._snapshot
+            self._snapshot = await resp.read()
+            self._snapshot_ts = time.monotonic()
+            return self._snapshot

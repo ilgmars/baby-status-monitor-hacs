@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.CAMERA]
 PANEL_URL = "/baby-monitor-frontend/crib-items-panel.js"
 PANEL_PATH = "crib-items"
-PANEL_VERSION = "0.9.13"
+PANEL_VERSION = "0.9.14"
 
 
 async def _async_register_panel(hass: HomeAssistant) -> None:

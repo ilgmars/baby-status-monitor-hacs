@@ -216,18 +216,59 @@ def test_item_image_urls_are_signed():
 def test_camera_entity():
     entry = MagicMock()
     entry.entry_id = "test_entry"
-    entry.data = {"host": "https://192.168.1.10", "stream_url": ""}
+    entry.data = {"host": "https://192.168.1.10", "stream_url": "", "token": "secret"}
 
     # Default AAC stream URL fallback
     camera = BabyCamera(entry)
     assert (
         asyncio.run(camera.stream_source()) == "rtsp://192.168.1.10:8554/cam?video=copy&audio=aac"
     )
+    assert camera.frame_interval == 60.0
+    assert camera._snapshot_url == "https://192.168.1.10/api/camera-snapshot"
 
     # Custom stream URL
     entry.data["stream_url"] = "rtsp://custom:8554/live"
     camera_custom = BabyCamera(entry)
     assert asyncio.run(camera_custom.stream_source()) == "rtsp://custom:8554/live"
+
+
+@patch("custom_components.baby_monitor.camera.async_create_clientsession")
+def test_camera_image_fetches_and_caches_snapshot(mock_session_factory):
+    class Response:
+        status = 200
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *_args):
+            return False
+
+        async def read(self):
+            return b"jpeg"
+
+    class Session:
+        def __init__(self):
+            self.calls = []
+
+        def get(self, url, headers):
+            self.calls.append((url, headers))
+            return Response()
+
+    entry = MagicMock()
+    entry.entry_id = "test_entry"
+    entry.data = {"host": "https://192.168.1.10/", "stream_url": "", "token": "secret"}
+    session = Session()
+    mock_session_factory.return_value = session
+    camera = BabyCamera(entry)
+
+    assert asyncio.run(camera.async_camera_image()) == b"jpeg"
+    assert asyncio.run(camera.async_camera_image()) == b"jpeg"
+    assert session.calls == [
+        (
+            "https://192.168.1.10/api/camera-snapshot",
+            {"Authorization": "Bearer secret"},
+        )
+    ]
 
 
 @patch("custom_components.baby_monitor.config_flow.async_create_clientsession")
