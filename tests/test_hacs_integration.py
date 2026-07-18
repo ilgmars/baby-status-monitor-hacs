@@ -133,6 +133,10 @@ def test_sensor_entities():
             "items": [{"id": "abc123", "item": "pacifier", "hazard": False}],
             "history": [{"id": "old123", "item": "toy", "hazard": False}],
         },
+        "scene_attention_event": {
+            "reason": "wet spot on the crib sheet",
+            "time": "2026-07-18 09:05:16",
+        },
         "health": {
             "llm": "ok",
             "llm_source": "litellm",
@@ -167,6 +171,16 @@ def test_sensor_entities():
     assert items_sensor.extra_state_attributes["history"][0]["image_url"] == item_image_url(
         "test_entry", "old123", "test-token"
     )
+
+    caption_sensor = BabySceneSensor(
+        coordinator,
+        entry,
+        "scene_attention_event",
+        "Attention caption [LLM]",
+        "caption",
+        "mdi:card-text-outline",
+    )
+    assert caption_sensor.native_value == "2026-07-18 09:05:16 - wet spot on the crib sheet"
 
     # Test health mapping
     health_sensor = BabySceneSensor(
