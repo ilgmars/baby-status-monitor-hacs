@@ -81,7 +81,7 @@ views:
                     entity: sensor.baby_monitor_baby_position
                     name: Position
                     icon: mdi:human-child
-                    color: blue
+                    color: green
                   - type: tile
                     entity: binary_sensor.baby_monitor_breathing_detected
                     name: Breathing
