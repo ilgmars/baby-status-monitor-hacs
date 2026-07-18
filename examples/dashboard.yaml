@@ -36,58 +36,119 @@ views:
               auto_mute: []
           - type: vertical-stack
             cards:
-              - type: horizontal-stack
+              - type: heading
+                heading: Safety
+                heading_style: subtitle
+                icon: mdi:shield-alert-outline
+              - type: grid
+                columns: 2
+                square: false
                 cards:
                   - type: tile
                     entity: binary_sensor.baby_monitor_danger
+                    name: Danger
+                    icon: mdi:alert-octagon-outline
+                    color: red
                   - type: tile
                     entity: binary_sensor.baby_monitor_warning
+                    name: Warning
+                    icon: mdi:alert-outline
+                    color: amber
               - type: tile
-                entity: sensor.baby_monitor_danger_reason
-              - type: tile
-                entity: sensor.baby_monitor_warning_reason
-              - type: horizontal-stack
+                entity: sensor.baby_monitor_attention_reason
+                name: Reason
+                icon: mdi:message-text-outline
+                color: grey
+              - type: heading
+                heading: Baby
+                heading_style: subtitle
+                icon: mdi:baby-face-outline
+              - type: grid
+                columns: 3
+                square: false
                 cards:
                   - type: tile
                     entity: binary_sensor.baby_monitor_baby_present
+                    name: Presence
+                    icon: mdi:home-heart
+                    color: green
                   - type: tile
                     entity: binary_sensor.baby_monitor_baby_visible
-              - type: tile
-                entity: sensor.baby_monitor_latest_status
-              - type: horizontal-stack
-                cards:
+                    name: Visibility
+                    icon: mdi:eye-outline
+                    color: green
                   - type: tile
-                    entity: binary_sensor.baby_monitor_crying
-                  - type: tile
-                    entity: sensor.baby_monitor_cry_reason
-              - type: horizontal-stack
-                cards:
+                    entity: sensor.baby_monitor_baby_position
+                    name: Position
+                    icon: mdi:human-child
+                    color: blue
                   - type: tile
                     entity: binary_sensor.baby_monitor_breathing_detected
+                    name: Breathing
+                    icon: mdi:lungs
+                    color: green
                   - type: tile
                     entity: sensor.baby_monitor_respiration_rate
-              - type: tile
-                entity: binary_sensor.baby_monitor_breathing_detection_degraded
-              - type: horizontal-stack
+                    name: Rate
+                    icon: mdi:pulse
+                    color: blue
+                  - type: tile
+                    entity: binary_sensor.baby_monitor_breathing_detection_degraded
+                    name: Sensor
+                    icon: mdi:wrench-clock
+                    color: grey
+                  - type: tile
+                    entity: binary_sensor.baby_monitor_crying
+                    name: Crying
+                    icon: mdi:emoticon-cry-outline
+                    color: amber
+                  - type: tile
+                    entity: sensor.baby_monitor_cry_reason
+                    name: Cry reason
+                    icon: mdi:message-text-outline
+                    color: grey
+                  - type: tile
+                    entity: binary_sensor.baby_monitor_movement
+                    name: Movement
+                    icon: mdi:run
+                    color: blue
+              - type: grid
+                columns: 2
+                square: false
                 cards:
                   - type: tile
                     entity: sensor.baby_monitor_sleep_state
+                    name: Sleep
+                    icon: mdi:sleep
+                    color: blue
                   - type: tile
-                    entity: sensor.baby_monitor_baby_position
-              - type: horizontal-stack
-                cards:
-                  - type: tile
-                    entity: binary_sensor.baby_monitor_face_covered
-                  - type: tile
-                    entity: binary_sensor.baby_monitor_movement
-              - type: horizontal-stack
+                    entity: sensor.baby_monitor_latest_status
+                    name: Latest
+                    icon: mdi:cctv
+                    color: grey
+              - type: heading
+                heading: System
+                heading_style: subtitle
+                icon: mdi:server-network
+              - type: grid
+                columns: 3
+                square: false
                 cards:
                   - type: tile
                     entity: binary_sensor.baby_monitor_camera_online
+                    name: Camera
+                    icon: mdi:cctv
+                    color: grey
+                  - type: tile
+                    entity: sensor.baby_monitor_sys_audio_health
+                    name: Audio
+                    icon: mdi:microphone-outline
+                    color: grey
                   - type: tile
                     entity: sensor.baby_monitor_sys_llm_health
-              - type: tile
-                entity: sensor.baby_monitor_sys_audio_health
+                    name: LLM
+                    icon: mdi:robot-outline
+                    color: grey
               # Objects seen in the crib - simple text list, no resource needed.
               # Check your entity id under Developer Tools -> States (it may be
               # sensor.baby_monitor_crib_items_llm depending on the integration name).
@@ -96,13 +157,12 @@ views:
                   {% set items = state_attr('sensor.baby_monitor_crib_items_llm',
                   'items') or [] %}
 
-                  ### &#128248; Crib cam - objects &nbsp;
-                  <span style="color:#ff5252">&#9679; REC</span>
+                  ### Crib cam - objects
 
                   {% if items %}
                   {% for it in items %}
-                  {% if it.hazard %}&#128997; **{{ it.item | upper }} - &#9888;
-                  HAZARD**{% else %}&#128994; {{ it.item }}{% endif %}
+                  {% if it.hazard %}**{{ it.item | upper }} - HAZARD**{% else %}{{
+                  it.item }}{% endif %}
                   {% endfor %}
                   {% else %}
                   `- no objects in the crib -`
