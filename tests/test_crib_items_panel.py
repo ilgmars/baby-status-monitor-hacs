@@ -6,13 +6,17 @@ import textwrap
 from pathlib import Path
 
 
-def _render_panel(history: list[dict]) -> dict:
+def _render_panel(
+    history: list[dict], attention_reason: str = "", attention_active: bool = False
+) -> dict:
     panel = Path("custom_components/baby_monitor/frontend/crib-items-panel.js")
     script = r"""
       const fs = require("fs");
       const vm = require("vm");
       const code = fs.readFileSync(process.argv[1], "utf8");
       const history = JSON.parse(process.argv[2]);
+      const attentionReason = process.argv[3] || "";
+      const attentionActive = process.argv[4] === "true";
       let PanelClass;
 
       class BaseElement {
@@ -55,6 +59,16 @@ def _render_panel(history: list[dict]) -> dict:
             entity_id: "sensor.bedroom_baby_monitor_crib_items_llm",
             attributes: { items: [], history },
           },
+          "sensor.bedroom_baby_monitor_attention_reason": {
+            entity_id: "sensor.bedroom_baby_monitor_attention_reason",
+            state: attentionReason || "none",
+            attributes: {},
+          },
+          "binary_sensor.bedroom_baby_monitor_attention_needed": {
+            entity_id: "binary_sensor.bedroom_baby_monitor_attention_needed",
+            state: attentionActive ? "on" : "off",
+            attributes: {},
+          },
         },
       };
 
@@ -68,7 +82,9 @@ def _render_panel(history: list[dict]) -> dict:
         hasNewest: grid.includes("item0"),
         hasOldest: grid.includes("item9"),
         hasSafeItem: grid.includes("pacifier"),
+        hasStain: grid.includes("stain"),
         hasEmptyState: grid.includes("No detected items"),
+        hasNoAlertMatch: grid.includes("No matching alert detections"),
         hasLive: grid.includes("LIVE") || title.includes("LIVE") || shell.includes("LIVE"),
         hasWarning: grid.includes("WARNING"),
         hasAlarm: grid.includes("ALARM"),
@@ -76,7 +92,15 @@ def _render_panel(history: list[dict]) -> dict:
     """
 
     result = subprocess.run(
-        ["node", "-e", textwrap.dedent(script), str(panel), json.dumps(history)],
+        [
+            "node",
+            "-e",
+            textwrap.dedent(script),
+            str(panel),
+            json.dumps(history),
+            attention_reason,
+            str(attention_active).lower(),
+        ],
         check=True,
         text=True,
         capture_output=True,
@@ -101,6 +125,23 @@ def test_non_alert_items_are_shown_and_live_indicator_removed():
     assert rendered["hasSafeItem"] is True
     assert rendered["hasEmptyState"] is False
     assert rendered["images"] == 1
+
+
+def test_active_attention_filters_unrelated_safe_items():
+    history = [
+        {"id": "pacifier", "item": "pacifier", "hazard": False, "first_seen": 1001},
+        {"id": "stain", "item": "stain", "hazard": False, "first_seen": 1000},
+    ]
+
+    rendered = _render_panel(
+        history,
+        attention_reason="There is a wet spot on the crib sheet.",
+        attention_active=True,
+    )
+
+    assert rendered["hasSafeItem"] is False
+    assert rendered["hasStain"] is True
+    assert rendered["hasNoAlertMatch"] is False
 
 
 def test_alert_history_rotation_does_not_render_sparse_page():

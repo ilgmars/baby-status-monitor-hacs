@@ -6,7 +6,7 @@ from homeassistant.components.sensor import SensorEntity
 
 from .const import DOMAIN
 from .entity import BabyEntity
-from .image_proxy import item_image_url
+from .image_proxy import attention_image_url, item_image_url
 
 # (key, name, unit)
 SENSORS = [
@@ -22,6 +22,7 @@ SCENE_SENSORS = [
     ("scene", "Baby position [LLM]", "position", "mdi:human-child"),
     ("scene_attention_event", "Attention reason [LLM]", "reason", "mdi:alert-circle-outline"),
     ("scene_attention_event", "Attention caption [LLM]", "caption", "mdi:card-text-outline"),
+    ("scene_attention_image", "Attention image [LLM]", "available", "mdi:image-search"),
     ("scene_danger_event", "Danger reason [LLM]", "reason", "mdi:alert-octagon-outline"),
     ("scene_warning_event", "Warning reason [LLM]", "reason", "mdi:alert-outline"),
     # Objects the item scanner currently sees in the crib (list -> "pacifier, toy").
@@ -83,6 +84,8 @@ class BabySceneSensor(BabyEntity, SensorEntity):
                 return "none"
             when = self._scene.get("time")
             return f"{when} - {reason}"[:255] if when else str(reason)[:255]
+        if self._topic_key == "scene_attention_image" and self._field == "available":
+            return "available" if value else "none"
         # Crib items: a list of {item, hazard} -> readable state, hazards marked.
         if self._field == "items":
             if not value:
@@ -114,5 +117,8 @@ class BabySceneSensor(BabyEntity, SensorEntity):
                     else item
                     for item in items
                 ]
+            attrs["_api_host"] = self._api_host
+        if self._topic_key == "scene_attention_image" and attrs.get("available"):
+            attrs["image_url"] = attention_image_url(self._entry_id, self._api_token)
             attrs["_api_host"] = self._api_host
         return attrs

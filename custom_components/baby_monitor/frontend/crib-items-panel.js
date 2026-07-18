@@ -27,6 +27,31 @@ class CribItemsPanel extends HTMLElement {
     return fallback;
   }
 
+  _attentionReason() {
+    const states = this._hass ? this._hass.states : {};
+    for (const [id, st] of Object.entries(states)) {
+      if (!id.startsWith("sensor.") || !id.includes("attention_reason")) continue;
+      const value = String(st.state || "").trim();
+      if (value && !["none", "unknown", "unavailable"].includes(value.toLowerCase())) return value;
+    }
+    return "";
+  }
+
+  _attentionActive() {
+    const states = this._hass ? this._hass.states : {};
+    return Object.entries(states).some(
+      ([id, st]) => id.startsWith("binary_sensor.") && id.includes("attention_needed") && st.state === "on"
+    );
+  }
+
+  _matchesReason(item, reason) {
+    const label = String(item.item || "").toLowerCase();
+    const text = String(reason || "").toLowerCase();
+    if (!label || !text) return false;
+    const wetMatch = ["stain", "wet stain", "wet spot"].includes(label) && /wet|stain|spot/.test(text);
+    return text.includes(label) || text.includes(label.replace(/s$/, "")) || wetMatch;
+  }
+
   _render() {
     if (!this._built) {
       this.attachShadow({ mode: "open" });
@@ -107,13 +132,18 @@ class CribItemsPanel extends HTMLElement {
       const tb = b.first_seen || 0;
       return tb - ta;
     });
+    const attentionReason = this._attentionReason();
+    const attentionActive = this._attentionActive() && attentionReason;
+    const shownItems = attentionActive
+      ? sortedItems.filter((it) => Boolean(it.hazard || it.alarm || it.warning) || this._matchesReason(it, attentionReason))
+      : sortedItems;
 
     const pageSize = 9;
-    const pageCount = Math.max(1, Math.ceil(sortedItems.length / pageSize));
+    const pageCount = Math.max(1, Math.ceil(shownItems.length / pageSize));
     const page = Math.floor(Date.now() / 15000) % pageCount;
-    let cells = sortedItems.slice(page * pageSize, page * pageSize + pageSize);
-    if (cells.length && cells.length < pageSize && sortedItems.length >= pageSize) {
-      cells = sortedItems.slice(0, pageSize - cells.length).concat(cells);
+    let cells = shownItems.slice(page * pageSize, page * pageSize + pageSize);
+    if (cells.length && cells.length < pageSize && shownItems.length >= pageSize) {
+      cells = shownItems.slice(0, pageSize - cells.length).concat(cells);
     }
     while (cells.length < pageSize) cells.push(null);
 
@@ -125,8 +155,9 @@ class CribItemsPanel extends HTMLElement {
     const apiToken = st && st.attributes._api_token ? st.attributes._api_token : "";
 
     const grid = this.shadowRoot.querySelector(".grid");
-    if (!sortedItems.length) {
-      grid.innerHTML = `<div class="tile empty state-empty"><span class="label">No detected items</span></div>`;
+    if (!shownItems.length) {
+      const empty = attentionActive ? "No matching alert detections" : "No detected items";
+      grid.innerHTML = `<div class="tile empty state-empty"><span class="label">${esc(empty)}</span></div>`;
     } else {
       grid.innerHTML = cells
         .map((it) => {
@@ -167,7 +198,7 @@ class CribItemsPanel extends HTMLElement {
     this.shadowRoot.querySelector(".title").innerHTML =
       `Crib camera &mdash; detections&nbsp;&nbsp;${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit', hour12: false})}`;
     this.shadowRoot.querySelector(".note").textContent = st
-      ? `source: ${st.entity_id}${sortedItems.length > 9 ? ` · page ${page + 1}/${pageCount}` : ""}`
+      ? `source: ${st.entity_id}${shownItems.length > 9 ? ` · page ${page + 1}/${pageCount}` : ""}`
       : "waiting for the crib-items sensor (update the Baby Monitor integration)...";
   }
 }

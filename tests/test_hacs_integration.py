@@ -114,6 +114,8 @@ from custom_components.baby_monitor.binary_sensor import BabyBinary, BabySceneBi
 from custom_components.baby_monitor.camera import BabyCamera  # noqa: E402
 from custom_components.baby_monitor.config_flow import BabyMonitorConfigFlow  # noqa: E402
 from custom_components.baby_monitor.image_proxy import (  # noqa: E402
+    attention_image_sig,
+    attention_image_url,
     item_image_sig,
     item_image_url,
     valid_item_id,
@@ -137,6 +139,7 @@ def test_sensor_entities():
             "reason": "wet spot on the crib sheet",
             "time": "2026-07-18 09:05:16",
         },
+        "scene_attention_image": {"available": True, "time": "2026-07-18 09:05:16"},
         "health": {
             "llm": "ok",
             "llm_source": "litellm",
@@ -181,6 +184,19 @@ def test_sensor_entities():
         "mdi:card-text-outline",
     )
     assert caption_sensor.native_value == "2026-07-18 09:05:16 - wet spot on the crib sheet"
+
+    image_sensor = BabySceneSensor(
+        coordinator,
+        entry,
+        "scene_attention_image",
+        "Attention image [LLM]",
+        "available",
+        "mdi:image-search",
+    )
+    assert image_sensor.native_value == "available"
+    assert image_sensor.extra_state_attributes["image_url"] == attention_image_url(
+        "test_entry", "test-token"
+    )
 
     # Test health mapping
     health_sensor = BabySceneSensor(
@@ -229,6 +245,10 @@ def test_item_image_urls_are_signed():
     assert url.endswith(item_image_sig("entry_1", "abc123", "secret"))
     assert valid_item_id("abc_123-x")
     assert not valid_item_id("../abc")
+
+    attention_url = attention_image_url("entry_1", "secret")
+    assert attention_url.startswith("/api/baby_monitor/entry_1/attention-image?sig=")
+    assert attention_url.endswith(attention_image_sig("entry_1", "secret"))
 
 
 def test_camera_entity():
