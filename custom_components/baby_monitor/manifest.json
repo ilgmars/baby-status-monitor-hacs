@@ -9,7 +9,7 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/ilgmars/baby-status-monitor-hacs/issues",
   "requirements": [],
-  "version": "0.9.18",
+  "version": "0.9.19",
   "dependencies": [
     "http",
     "panel_custom",
