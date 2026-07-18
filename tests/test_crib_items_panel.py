@@ -68,7 +68,7 @@ def _render_panel(history: list[dict]) -> dict:
         hasNewest: grid.includes("item0"),
         hasOldest: grid.includes("item9"),
         hasSafeItem: grid.includes("pacifier"),
-        hasEmptyState: grid.includes("No warning or alarm items"),
+        hasEmptyState: grid.includes("No detected items"),
         hasLive: grid.includes("LIVE") || title.includes("LIVE") || shell.includes("LIVE"),
         hasWarning: grid.includes("WARNING"),
         hasAlarm: grid.includes("ALARM"),
@@ -84,7 +84,7 @@ def _render_panel(history: list[dict]) -> dict:
     return json.loads(result.stdout)
 
 
-def test_non_alert_items_are_hidden_and_live_indicator_removed():
+def test_non_alert_items_are_shown_and_live_indicator_removed():
     history = [
         {
             "id": "safe1",
@@ -98,9 +98,9 @@ def test_non_alert_items_are_hidden_and_live_indicator_removed():
     rendered = _render_panel(history)
 
     assert rendered["hasLive"] is False
-    assert rendered["hasSafeItem"] is False
-    assert rendered["hasEmptyState"] is True
-    assert rendered["images"] == 0
+    assert rendered["hasSafeItem"] is True
+    assert rendered["hasEmptyState"] is False
+    assert rendered["images"] == 1
 
 
 def test_alert_history_rotation_does_not_render_sparse_page():

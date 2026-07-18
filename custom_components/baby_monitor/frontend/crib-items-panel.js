@@ -89,7 +89,7 @@ class CribItemsPanel extends HTMLElement {
         </style>
         <div class="wall">
           <div class="bar">
-            <span class="title">Crib camera &mdash; alerts</span>
+            <span class="title">Crib camera &mdash; detections</span>
           </div>
           <div class="grid"></div>
           <div class="note"></div>
@@ -102,8 +102,7 @@ class CribItemsPanel extends HTMLElement {
     const historyItems = st && Array.isArray(st.attributes.history) ? st.attributes.history : [];
     const items = historyItems.length ? historyItems : currentItems;
 
-    const alertItems = items.filter((it) => it && (it.hazard || it.warning || it.alarm));
-    const sortedItems = alertItems.slice().sort((a, b) => {
+    const sortedItems = items.filter(Boolean).slice().sort((a, b) => {
       const ta = a.first_seen || 0;
       const tb = b.first_seen || 0;
       return tb - ta;
@@ -127,15 +126,16 @@ class CribItemsPanel extends HTMLElement {
 
     const grid = this.shadowRoot.querySelector(".grid");
     if (!sortedItems.length) {
-      grid.innerHTML = `<div class="tile empty state-empty"><span class="label">No warning or alarm items</span></div>`;
+      grid.innerHTML = `<div class="tile empty state-empty"><span class="label">No detected items</span></div>`;
     } else {
       grid.innerHTML = cells
         .map((it) => {
           if (!it) return `<div class="tile empty"><span class="label">- - -</span></div>`;
           const alarm = Boolean(it.hazard || it.alarm);
-          const alertLabel = alarm ? "ALARM" : "WARNING";
-          const alertClass = alarm ? " hazard" : " warning";
-          const flag = `<span class="flag">${esc(alertLabel)}</span>`;
+          const warning = Boolean(it.warning);
+          const alertLabel = alarm ? "ALARM" : warning ? "WARNING" : "";
+          const alertClass = alarm ? " hazard" : warning ? " warning" : "";
+          const flag = alertLabel ? `<span class="flag">${esc(alertLabel)}</span>` : "";
 
           let newBadge = "";
           let timeLabel = "--:--";
@@ -165,7 +165,7 @@ class CribItemsPanel extends HTMLElement {
     }
 
     this.shadowRoot.querySelector(".title").innerHTML =
-      `Crib camera &mdash; alerts&nbsp;&nbsp;${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit', hour12: false})}`;
+      `Crib camera &mdash; detections&nbsp;&nbsp;${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit', hour12: false})}`;
     this.shadowRoot.querySelector(".note").textContent = st
       ? `source: ${st.entity_id}${sortedItems.length > 9 ? ` · page ${page + 1}/${pageCount}` : ""}`
       : "waiting for the crib-items sensor (update the Baby Monitor integration)...";
