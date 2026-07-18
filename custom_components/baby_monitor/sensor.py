@@ -71,6 +71,46 @@ class BabySceneSensor(BabyEntity, SensorEntity):
         value = (self.coordinator.data or {}).get(self._topic_key)
         return value if isinstance(value, dict) else {}
 
+    def _attention_reason(self) -> str:
+        data = self.coordinator.data or {}
+        if data.get("scene_attention") is not True:
+            return ""
+        event = data.get("scene_attention_event")
+        if not isinstance(event, dict):
+            return ""
+        reason = str(event.get("reason") or "").strip()
+        if reason.lower() in {"", "none", "unknown", "unavailable"}:
+            return ""
+        return reason
+
+    @staticmethod
+    def _matches_attention_reason(item: dict, reason: str) -> bool:
+        label = str(item.get("item") or "").lower()
+        text = reason.lower()
+        if not label or not text:
+            return False
+        if label in {"stain", "wet stain", "wet spot"} and any(
+            word in text for word in ("wet", "stain", "spot")
+        ):
+            return True
+        return label in text or label.removesuffix("s") in text
+
+    def _visible_items(self, items: list) -> list:
+        reason = self._attention_reason()
+        if not reason:
+            return items
+        return [
+            item
+            for item in items
+            if isinstance(item, dict)
+            and (
+                item.get("hazard")
+                or item.get("alarm")
+                or item.get("warning")
+                or self._matches_attention_reason(item, reason)
+            )
+        ]
+
     @property
     def native_value(self):
         value = self._scene.get(self._field)
@@ -88,6 +128,7 @@ class BabySceneSensor(BabyEntity, SensorEntity):
             return "available" if value else "none"
         # Crib items: a list of {item, hazard} -> readable state, hazards marked.
         if self._field == "items":
+            value = self._visible_items(value or [])
             if not value:
                 return "none"
             names = [

@@ -139,6 +139,7 @@ def test_sensor_entities():
             "reason": "wet spot on the crib sheet",
             "time": "2026-07-18 09:05:16",
         },
+        "scene_attention": False,
         "scene_attention_image": {"available": True, "time": "2026-07-18 09:05:16"},
         "health": {
             "llm": "ok",
@@ -174,6 +175,13 @@ def test_sensor_entities():
     assert items_sensor.extra_state_attributes["history"][0]["image_url"] == item_image_url(
         "test_entry", "old123", "test-token"
     )
+    coordinator.data["scene_attention"] = True
+    assert items_sensor.native_value == "none"
+    coordinator.data["scene"]["items"] = [
+        {"id": "abc123", "item": "pacifier", "hazard": False},
+        {"id": "wet123", "item": "wet spot", "hazard": False},
+    ]
+    assert items_sensor.native_value == "wet spot"
 
     caption_sensor = BabySceneSensor(
         coordinator,
