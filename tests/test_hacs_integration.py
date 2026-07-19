@@ -166,7 +166,7 @@ def test_sensor_entities():
     items_sensor = BabySceneSensor(
         coordinator, entry, "scene", "Crib items [LLM]", "items", "mdi:cube-scan"
     )
-    assert items_sensor.native_value == "pacifier"
+    assert items_sensor.native_value == "none"
     assert items_sensor.extra_state_attributes["_api_host"] == "http://test-host"
     assert "_api_token" not in items_sensor.extra_state_attributes
     assert items_sensor.extra_state_attributes["items"][0]["image_url"] == item_image_url(

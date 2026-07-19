@@ -97,8 +97,6 @@ class BabySceneSensor(BabyEntity, SensorEntity):
 
     def _visible_items(self, items: list) -> list:
         reason = self._attention_reason()
-        if not reason:
-            return items
         return [
             item
             for item in items
@@ -107,7 +105,7 @@ class BabySceneSensor(BabyEntity, SensorEntity):
                 item.get("hazard")
                 or item.get("alarm")
                 or item.get("warning")
-                or self._matches_attention_reason(item, reason)
+                or (reason and self._matches_attention_reason(item, reason))
             )
         ]
 

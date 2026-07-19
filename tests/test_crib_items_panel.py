@@ -7,16 +7,20 @@ from pathlib import Path
 
 
 def _render_panel(
-    history: list[dict], attention_reason: str = "", attention_active: bool = False
+    items: list[dict],
+    history: list[dict] | None = None,
+    attention_reason: str = "",
+    attention_active: bool = False,
 ) -> dict:
     panel = Path("custom_components/baby_monitor/frontend/crib-items-panel.js")
     script = r"""
       const fs = require("fs");
       const vm = require("vm");
       const code = fs.readFileSync(process.argv[1], "utf8");
-      const history = JSON.parse(process.argv[2]);
-      const attentionReason = process.argv[3] || "";
-      const attentionActive = process.argv[4] === "true";
+      const items = JSON.parse(process.argv[2]);
+      const history = JSON.parse(process.argv[3]);
+      const attentionReason = process.argv[4] || "";
+      const attentionActive = process.argv[5] === "true";
       let PanelClass;
 
       class BaseElement {
@@ -57,7 +61,7 @@ def _render_panel(
         states: {
           "sensor.bedroom_baby_monitor_crib_items_llm": {
             entity_id: "sensor.bedroom_baby_monitor_crib_items_llm",
-            attributes: { items: [], history },
+            attributes: { items, history },
           },
           "sensor.bedroom_baby_monitor_attention_reason": {
             entity_id: "sensor.bedroom_baby_monitor_attention_reason",
@@ -83,6 +87,7 @@ def _render_panel(
         hasOldest: grid.includes("item9"),
         hasSafeItem: grid.includes("pacifier"),
         hasStain: grid.includes("stain"),
+        hasDate: /\d{1,2}\/\d{1,2}\/\d{4} \d{2}:\d{2}/.test(grid),
         hasEmptyState: grid.includes("No detected items"),
         hasNoAlertMatch: grid.includes("No matching alert detections"),
         hasLive: grid.includes("LIVE") || title.includes("LIVE") || shell.includes("LIVE"),
@@ -97,7 +102,8 @@ def _render_panel(
             "-e",
             textwrap.dedent(script),
             str(panel),
-            json.dumps(history),
+            json.dumps(items),
+            json.dumps(history or []),
             attention_reason,
             str(attention_active).lower(),
         ],
@@ -108,8 +114,8 @@ def _render_panel(
     return json.loads(result.stdout)
 
 
-def test_non_alert_items_are_shown_and_live_indicator_removed():
-    history = [
+def test_non_alert_items_are_hidden_and_live_indicator_removed():
+    items = [
         {
             "id": "safe1",
             "item": "pacifier",
@@ -119,22 +125,22 @@ def test_non_alert_items_are_shown_and_live_indicator_removed():
         }
     ]
 
-    rendered = _render_panel(history)
+    rendered = _render_panel(items)
 
     assert rendered["hasLive"] is False
-    assert rendered["hasSafeItem"] is True
-    assert rendered["hasEmptyState"] is False
-    assert rendered["images"] == 1
+    assert rendered["hasSafeItem"] is False
+    assert rendered["hasEmptyState"] is True
+    assert rendered["images"] == 0
 
 
 def test_active_attention_filters_unrelated_safe_items():
-    history = [
+    items = [
         {"id": "pacifier", "item": "pacifier", "hazard": False, "first_seen": 1001},
         {"id": "stain", "item": "stain", "hazard": False, "first_seen": 1000},
     ]
 
     rendered = _render_panel(
-        history,
+        items,
         attention_reason="There is a wet spot on the crib sheet.",
         attention_active=True,
     )
@@ -144,8 +150,8 @@ def test_active_attention_filters_unrelated_safe_items():
     assert rendered["hasNoAlertMatch"] is False
 
 
-def test_alert_history_rotation_does_not_render_sparse_page():
-    history = [
+def test_history_is_ignored_and_current_alerts_do_not_rotate():
+    items = [
         {
             "id": f"id{i}",
             "item": f"item{i}",
@@ -155,11 +161,16 @@ def test_alert_history_rotation_does_not_render_sparse_page():
         }
         for i in range(10)
     ]
+    history = [
+        {"id": "safe-old", "item": "pacifier", "hazard": False, "first_seen": 2000},
+    ]
 
-    rendered = _render_panel(history)
+    rendered = _render_panel(items, history=history)
 
     assert rendered["blanks"] == 0
     assert rendered["tiles"] == 9
     assert rendered["hasNewest"] is True
-    assert rendered["hasOldest"] is True
+    assert rendered["hasOldest"] is False
+    assert rendered["hasSafeItem"] is False
     assert rendered["hasAlarm"] is True
+    assert rendered["hasDate"] is True

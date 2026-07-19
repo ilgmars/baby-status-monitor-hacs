@@ -123,9 +123,7 @@ class CribItemsPanel extends HTMLElement {
     }
 
     const st = this._findState();
-    const currentItems = st && Array.isArray(st.attributes.items) ? st.attributes.items : [];
-    const historyItems = st && Array.isArray(st.attributes.history) ? st.attributes.history : [];
-    const items = historyItems.length ? historyItems : currentItems;
+    const items = st && Array.isArray(st.attributes.items) ? st.attributes.items : [];
 
     const sortedItems = items.filter(Boolean).slice().sort((a, b) => {
       const ta = a.first_seen || 0;
@@ -134,17 +132,11 @@ class CribItemsPanel extends HTMLElement {
     });
     const attentionReason = this._attentionReason();
     const attentionActive = this._attentionActive() && attentionReason;
-    const shownItems = attentionActive
-      ? sortedItems.filter((it) => Boolean(it.hazard || it.alarm || it.warning) || this._matchesReason(it, attentionReason))
-      : sortedItems;
+    const shownItems = sortedItems.filter((it) =>
+      Boolean(it.hazard || it.alarm || it.warning) || (attentionActive && this._matchesReason(it, attentionReason)));
 
     const pageSize = 9;
-    const pageCount = Math.max(1, Math.ceil(shownItems.length / pageSize));
-    const page = Math.floor(Date.now() / 15000) % pageCount;
-    let cells = shownItems.slice(page * pageSize, page * pageSize + pageSize);
-    if (cells.length && cells.length < pageSize && shownItems.length >= pageSize) {
-      cells = shownItems.slice(0, pageSize - cells.length).concat(cells);
-    }
+    const cells = shownItems.slice(0, pageSize);
     while (cells.length < pageSize) cells.push(null);
 
     const esc = (s) =>
@@ -169,14 +161,16 @@ class CribItemsPanel extends HTMLElement {
           const flag = alertLabel ? `<span class="flag">${esc(alertLabel)}</span>` : "";
 
           let newBadge = "";
-          let timeLabel = "--:--";
+          let timeLabel = "---- -- -- --:--";
           if (it.first_seen) {
             const isNew = (Date.now() / 1000 - it.first_seen) <= 600;
             if (isNew) {
               newBadge = '<span class="badge-new">NEW</span>';
             }
             const d = new Date(it.first_seen * 1000);
-            timeLabel = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
+            const date = d.toLocaleDateString([], {year: 'numeric', month: '2-digit', day: '2-digit'});
+            const time = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
+            timeLabel = `${date} ${time}`;
           }
 
           let imgHtml = "";
@@ -198,7 +192,7 @@ class CribItemsPanel extends HTMLElement {
     this.shadowRoot.querySelector(".title").innerHTML =
       `Crib camera &mdash; detections&nbsp;&nbsp;${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit', hour12: false})}`;
     this.shadowRoot.querySelector(".note").textContent = st
-      ? `source: ${st.entity_id}${shownItems.length > 9 ? ` · page ${page + 1}/${pageCount}` : ""}`
+      ? `source: ${st.entity_id}${shownItems.length > pageSize ? ` · newest ${pageSize}/${shownItems.length}` : ""}`
       : "waiting for the crib-items sensor (update the Baby Monitor integration)...";
   }
 }
